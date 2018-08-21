@@ -1,0 +1,55 @@
+/*!
+ * Start Bootstrap - Blog Post (https://startbootstrap.com/template-overviews/blog-post)
+ * Copyright 2013-2017 Start Bootstrap
+ * Licensed under MIT (https://github.com/BlackrockDigital/startbootstrap-blog-post/blob/master/LICENSE)
+ */
+
+body {
+  padding-top: 54px;
+}
+
+@media (min-width: 992px) {
+  body {
+    padding-top: 56px;
+  }
+}
+.margin-top22px {margin-top: 22px}
+.margin-top20px {margin-top: 20px}
+.margin-top15px {margin-top: 15px}
+.margin-top10px {margin-top: 10px}
+.margin-top7px {margin-top: 7px}
+.margin-top5px {margin-top: 5px}
+.margin-bottom5px {margin-bottom: 5px}
+.default-avatar {background: #5cb85c;border-radius: 900px; height: 90px; width: 90px}
+.avatar {margin: 15px; border-radius: 900px; border: 1px solid forestgreen; cursor: pointer;}
+.avatar:hover {border-radius: 0px;}
+table.markup-help-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.list-two-params {
+  webkit-column-count: 2;
+  -moz-column-count: 2;
+  column-count: 2;
+  column-gap: 15px;
+  -webkit-column-gap: 15px;
+  -moz-column-gap: 15px;
+}
+
+.post__title_link:visited {
+  color: #487284;
+}
+
+.post__title_link {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #444;
+  font-weight: 500;
+  font-size: 28px;
+  line-height: 36.4px;
+}
+
+a {
+  color: #548eaa;
+  text-decoration: none;
+}
