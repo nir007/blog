@@ -56,39 +56,42 @@ func (u *User) NickNameExists() (bool, error) {
 	var rows *sql.Rows
 	if u.NickName != "" {
 		rows, err = pg.ExecuteSelect(findNickName, u.NickName)
-		for rows.Next() {
-			rows.Scan(&count)
+		if err == nil {
+			for rows.Next() {
+				rows.Scan(&count)
+			}
 		}
 	}
 
 	return count > 0, err
 }
 
-func (u *User) Exists() bool {
+func (u *User) Exists() (bool, error) {
+	var err error = nil
+	var rows *sql.Rows
 	if u.Uuid != "" {
-		rows, _:= pg.ExecuteSelect(selectUserByUuid, u.Uuid)
+		rows, err = pg.ExecuteSelect(selectUserByUuid, u.Uuid)
 
-		for rows.Next() {
-			rows.Scan(
-				&u.Id,
-				&u.Person,
-				&u.NickName,
-				&u.Avatar,
-				&u.Uuid,
-				&u.CreatedAt,
-			)
-		}
-
-		if u.Id != 0 {
-			return true
+		if err == nil {
+			for rows.Next() {
+				rows.Scan(
+					&u.Id,
+					&u.Person,
+					&u.NickName,
+					&u.Avatar,
+					&u.Uuid,
+					&u.CreatedAt,
+				)
+			}
 		}
 	}
 
-	return false
+	return u.Id != 0, err
 }
 
-func (u *User) One(id int64) {
-	rows, _:= pg.ExecuteSelect(selectUser, id)
+func (u *User) One(id int64) (err error) {
+	var rows *sql.Rows
+	rows, err = pg.ExecuteSelect(selectUser, id)
 
 	for rows.Next() {
 		rows.Scan(
@@ -100,24 +103,30 @@ func (u *User) One(id int64) {
 			&u.CreatedAt,
 		)
 	}
+
+	return err
 }
 
-func (u *User) Get(limit, skip int64) (result []User) {
-	rows, _:= pg.ExecuteSelect(selectUsers)
+func (u *User) Get(limit, skip int64) (result []User, err error) {
+	var rows *sql.Rows
 
-	for rows.Next() {
-		u := User{}
+	rows, err = pg.ExecuteSelect(selectUsers)
 
-		rows.Scan(
-			&u.Id,
-			&u.Person,
-			&u.NickName,
-			&u.Avatar,
-			&u.CreatedAt,
-		)
+	if err == nil {
+		for rows.Next() {
+			u := User{}
 
-		result = append(result, u)
+			rows.Scan(
+				&u.Id,
+				&u.Person,
+				&u.NickName,
+				&u.Avatar,
+				&u.CreatedAt,
+			)
+
+			result = append(result, u)
+		}
 	}
 
-	return result
+	return result, err
 }

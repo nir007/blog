@@ -127,10 +127,10 @@ export default {
         if (r.status === 200) {
           location.href = '#/a/' + r.data.id
         } else {
-          alert(r.data)
+          this.$root.$emit('alarm', r.data)
         }
-      }, function (e) {
-        alert(e.statusText)
+      }, function () {
+        this.$root.$emit('alarm', 'Some kind of error happened')
       })
     }
   },
@@ -159,7 +159,7 @@ export default {
           }
           this.published = r.data.article.published
           if (!r.data.article.is_owner) {
-            location.href = '#/article/' + this.id
+            this.$router.push({path: 'a', params: { id: this.id }})
           }
         } else {
           this.notFound = true

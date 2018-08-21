@@ -3,13 +3,13 @@ package main
 import (
 	"./models"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/satori/go.uuid"
 	tpl "html/template"
+	"github.com/satori/go.uuid"
 	"net/http"
 	"strconv"
 	"time"
+	"fmt"
 )
 
 const cookieNameId = "uuid"
@@ -38,36 +38,7 @@ func main() {
 	router.HandleFunc("/aj_update_article", ajUpdateArticleAction)
 	router.HandleFunc("/aj_get_person", ajGetPersonAction)
 	router.HandleFunc("/aj_get_persons", ajGetPersonsAction)
-	http.ListenAndServe(":80", router)
-}
-
-func getLoggedUser(uuid string) models.User {
-	user := models.User{Uuid: uuid}
-
-	if user.Exists() {
-		loggedUsers[user.Uuid] = user
-	}
-
-	return user
-}
-
-func ajIsLoggedAction(w http.ResponseWriter, r *http.Request) {
-	response := models.Response{Status: 500, Data: false}
-	uid, err := r.Cookie("uuid")
-
-	if err == nil {
-		getLoggedUser(uid.Value)
-	}
-
-	if uid != nil {
-		if u, ok := loggedUsers[uid.Value]; ok {
-			response.Status = 200
-			response.Data = u
-		}
-	}
-
-	w.Header().Set("Content-Type", contentTypeJson)
-	w.Write(response.ToBytes())
+	http.ListenAndServe(":81", router)
 }
 
 func indexAction(w http.ResponseWriter, r *http.Request) {
@@ -81,12 +52,52 @@ func indexAction(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func getLoggedUser(uuid string) (user models.User, err error) {
+	user.Uuid = uuid
+	var exists bool
+
+	if exists, err = user.Exists(); err == nil && exists {
+		loggedUsers[user.Uuid] = user
+	}
+
+	return user, err
+}
+
+func ajIsLoggedAction(w http.ResponseWriter, r *http.Request) {
+	response := models.Response{}
+	uid, err := r.Cookie("uuid")
+
+	if err == nil {
+		_, err := getLoggedUser(uid.Value)
+
+		if err != nil {
+			response.Status = 500
+			response.Data = err
+		}
+	}
+
+	if uid != nil {
+		if u, ok := loggedUsers[uid.Value]; ok {
+			response.Status = 200
+			response.Data = u
+		}
+	}
+
+	w.Header().Set("Content-Type", contentTypeJson)
+	w.Write(response.ToBytes())
+}
+
 func ajGetTags(w http.ResponseWriter, r *http.Request) {
 	response := models.Response{}
 	article := models.Article{}
 
-	response.Status = 200
-	response.Data = article.GetTags()
+	if tags, err := article.GetTags(); err != nil {
+		response.Status = 500
+		response.Data = err
+	} else {
+		response.Status = 200
+		response.Data = tags
+	}
 
 	w.Header().Set("ContentType", contentTypeJson)
 	w.Write(response.ToBytes())
@@ -94,31 +105,44 @@ func ajGetTags(w http.ResponseWriter, r *http.Request) {
 
 func ajGetArticleAction(w http.ResponseWriter, r *http.Request) {
 	user := models.User{}
-	response := models.Response{Status: 500, Data: "Article not found"}
+	response := models.Response{
+		Status: 404,
+		Data: "Article not found",
+	}
+
 	id := r.FormValue("id")
 	articleId, _ := strconv.ParseInt(id, 10, 64)
 
 	article := models.Article{}
-	article.One(articleId)
+	err := article.One(articleId)
 
-	uid, err := r.Cookie("uuid")
-
-	if uid != nil && err == nil {
-		user := getLoggedUser(uid.Value)
-		if user.Id == article.AuthorId {
-			article.IsOwner = true
+	if err != nil {
+		response.Status = 500
+		response.Data = err
+	} else {
+		uid, err := r.Cookie("uuid")
+		if uid != nil && err == nil {
+			user, err := getLoggedUser(uid.Value)
+			if user.Id == article.AuthorId && err == nil {
+				article.IsOwner = true
+			}
 		}
-	}
 
-	complexData := map[string]interface{}{
-		"article": article,
-	}
+		complexData := map[string]interface{}{
+			"article": article,
+		}
 
-	if article.Id > 0 {
-		response.Status = 200
-		user.One(int64(article.AuthorId))
-		complexData["author"] = user
-		response.Data = complexData
+		if article.Id > 0 {
+			err = user.One(int64(article.AuthorId))
+			if err != nil {
+				response.Status = 500
+				response.Data = err
+			} else {
+				response.Status = 200
+				complexData["author"] = user
+				response.Data = complexData
+			}
+		}
 	}
 
 	w.Header().Set("Content-Type", contentTypeJson)
@@ -133,7 +157,7 @@ func ajAddArticleAction(w http.ResponseWriter, r *http.Request) {
 	if uid != nil {
 		if user, ok := loggedUsers[uid.Value]; ok {
 			err := json.NewDecoder(r.Body).Decode(&article)
-			fmt.Println(article.Tags)
+
 			if err != nil {
 				response.Status = 500
 				response.Data = err.Error()
@@ -158,24 +182,29 @@ func ajAddArticleAction(w http.ResponseWriter, r *http.Request) {
 }
 
 func ajUpdateArticleAction(w http.ResponseWriter, r *http.Request) {
-	response := models.Response{}
+	response := models.Response{Status: 500, Data: "Something went wrong"}
 	article := models.Article{}
 
 	uid, err := r.Cookie(cookieNameId)
 
+	fmt.Println(uid)
+
 	if uid != nil && err == nil {
-		user := getLoggedUser(uid.Value)
 		err := json.NewDecoder(r.Body).Decode(&article)
-
-		fmt.Println(article)
-
 		if err != nil {
 			response.Status = 500
 			response.Data = err.Error()
-		} else if user.Id == article.AuthorId {
-			article.Update()
-			response.Status = 200
-			response.Data = article
+		} else if user, err := getLoggedUser(uid.Value);
+			err == nil && user.Id == article.AuthorId {
+
+			_, err := article.Update()
+			if err != nil {
+				response.Status = 500
+				response.Data = err
+			} else {
+				response.Status = 200
+				response.Data = article
+			}
 		}
 	} else {
 		response.Status = 500
@@ -187,6 +216,7 @@ func ajUpdateArticleAction(w http.ResponseWriter, r *http.Request) {
 }
 
 func ajGetArticlesAction(w http.ResponseWriter, r *http.Request) {
+	response := models.Response{}
 	authorId := r.FormValue("author_id")
 	tag := r.FormValue("tag")
 	limit := r.FormValue("limit")
@@ -197,22 +227,27 @@ func ajGetArticlesAction(w http.ResponseWriter, r *http.Request) {
 	skip, _ := strconv.ParseInt(offset, 10, 64)
 
 	article := models.Article{}
-	articles := article.Get(aId, perPage, skip, tag)
+	articles, err := article.Get(aId, perPage, skip, tag)
 
-	uid, err := r.Cookie("uuid")
+	if err != nil {
+		response.Status = 500
+		response.Data = err
+	} else {
+		uid, err := r.Cookie("uuid")
 
-	if aId > 0 && uid != nil && err == nil {
-		user := getLoggedUser(uid.Value)
-		for k, v := range articles {
-			if user.Id == v.AuthorId {
-				articles[k].IsOwner = true
+		if aId > 0 && uid != nil && err == nil {
+			user, err := getLoggedUser(uid.Value)
+			if err == nil {
+				for k, v := range articles {
+					if user.Id == v.AuthorId {
+						articles[k].IsOwner = true
+					}
+				}
 			}
 		}
-	}
 
-	response := models.Response{
-		Status: 200,
-		Data:   articles,
+		response.Status = 200
+		response.Data = articles
 	}
 
 	w.Header().Set("Content-type", contentTypeJson)
@@ -290,7 +325,7 @@ func ajSignInAction(w http.ResponseWriter, r *http.Request) {
 	uid := r.FormValue("uuid")
 	user := models.User{Uuid: uid}
 
-	if user.Exists() {
+	if exists, err := user.Exists(); err == nil && exists {
 		loggedUsers[user.Uuid] = user
 
 		cookie := http.Cookie{
@@ -327,7 +362,7 @@ func ajGetPersonAction(w http.ResponseWriter, r *http.Request) {
 	if personId == 0 {
 		user = models.User{Uuid: uid.Value}
 
-		if user.Exists() {
+		if exists, err := user.Exists(); err == nil && exists {
 			loggedUsers[user.Uuid] = user
 		}
 	} else {
@@ -359,8 +394,13 @@ func ajGetPersonsAction(w http.ResponseWriter, r *http.Request) {
 	user := models.User{}
 	response := models.Response{}
 
-	response.Status = 200
-	response.Data = user.Get(perPage, skip)
+	if users, err := user.Get(perPage, skip); err != nil {
+		response.Status = 500
+		response.Data = err
+	} else {
+		response.Status = 200
+		response.Data = users
+	}
 
 	w.Header().Set("Content-type", contentTypeJson)
 	w.Write(response.ToBytes())

@@ -26,10 +26,13 @@ import Tags from '../parts/Tags.vue'
 export default {
   data () {
     return {
+      tag: '',
       urls: {
         isLogged: '/aj_is_logged'
       },
-      params: ['tag']
+      params: {
+        'tag': 'string'
+      }
     }
   },
   components: {
@@ -37,8 +40,7 @@ export default {
     'tags': Tags
   },
   created () {
-    this.tag = typeof this.$route.params.tag !== 'undefined'
-      ? this.$route.params.tag : ''
+    this.tag = this.$route.params.tag
   },
   mounted () {
     this.$http.post(this.urls.isLogged)

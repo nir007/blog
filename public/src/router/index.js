@@ -23,59 +23,38 @@ export default new Router({
     {
       path: '/articles/:tag?',
       name: 'Articles',
-      component: Articles,
-      beforeEnter: (to, from, next) => {
-        next()
-      }
+      component: Articles
     },
     {
       path: '/a/:id',
       name: 'Article',
-      component: Article,
-      beforeEnter: (to, from, next) => {
-        next()
-      }
+      component: Article
     },
     {
       path: '/new_article',
       name: 'NewArticle',
-      component: NewArticle,
-      beforeEnter: (to, from, next) => {
-        next()
-      }
+      component: NewArticle
     },
     {
       path: '/edit/article/:id',
       name: 'EditArticle',
-      component: EditArticle,
-      beforeEnter: (to, from, next) => {
-        next()
-      }
+      component: EditArticle
     },
     {
       path: '/person/:id?',
       name: 'Person',
       props: true,
-      component: Person,
-      beforeEnter: (to, from, next) => {
-        next()
-      }
+      component: Person
     },
     {
       path: '/persons',
       name: 'Persons',
-      component: Persons,
-      beforeEnter: (to, from, next) => {
-        next()
-      }
+      component: Persons
     },
     {
       path: '/markdown',
       name: 'Markdown',
-      component: Markdown,
-      beforeEnter: (to, from, next) => {
-        next()
-      }
+      component: Markdown
     },
     {
       path: '*',

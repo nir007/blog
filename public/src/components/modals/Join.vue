@@ -66,8 +66,8 @@ export default {
       ).then(function (r) {
         r = JSON.parse(r.bodyText)
         this.nickNameExists = r.data
-      }, function (e) {
-        alert(e.statusText)
+      }, function () {
+        this.$root.$emit('alarm', 'Some kind of error happened')
       })
     },
     handleOk: function () {
@@ -110,10 +110,10 @@ export default {
           if (r.status === 200) {
             location.href = '#/person/'
           } else {
-            alert(r.data)
+            this.$root.$emit('alarm', {err: r.data, timeout: 5000})
           }
-        }, function (e) {
-          alert(e.statusText)
+        }, function () {
+          this.$root.$emit('alarm', 'Some kind of error happened')
         })
     },
     clearForm: function () {

@@ -2,14 +2,14 @@
   <div class="row">
     <div class="col-lg-8">
       <br>
-      <div v-if="!notFound">
+      <div v-if="!notFound && (article.published > 0 || article.isOwner)">
         <div class="row">
           <div class="col-md-10">
             <p class="lead">
               by
               <a :href="'#/person/' + author.id">
                 {{author.nickName}}
-              </a>
+              </a> | <small class="text-muted">{{article.createdAt}}</small>
             </p>
           </div>
           <div class="col-md-2 text-right">
@@ -63,7 +63,7 @@
           </div>
         </div>
       </div>
-      <div v-if="notFound" class="text-center">
+      <div v-if="notFound || (article.published <= 0 && !article.isOwner)" class="text-center">
         <h1 class="text-center">Article not found</h1>
         <img src="/static/assets/img/404-error.jpg" alt="404 not found" >
       </div>
@@ -133,7 +133,7 @@ export default {
           this.article.title = r.data.article.title
           this.article.text = r.data.article.text
           this.article.tags = r.data.article.tags
-          this.article.createdAt = r.data.article.created_at
+          this.article.createdAt = r.data.article.created
           this.article.published = r.data.article.published
           this.article.isOwner = r.data.article.is_owner
           this.author.id = r.data.author.id

@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div v-if="articles.length > 0" class="card margin-top22px" v-for="(item) in articles" :key="item.id">
-      <div class="card-body">
+    <div v-if="(articles.length > 0) && item.published || item.is_owner" class="card margin-top22px" v-for="(item) in articles" :key="item.id">
+      <div v-bind:class="{hiddenBlock: !item.published}" class="card-body">
         <div class="row">
           <div class="col-md-10">
             <h2 class="post__title">
@@ -39,7 +39,7 @@ export default {
       isEmpty: false,
       articles: [],
       urls: {
-        get_articles: '/get_articles'
+        getArticles: '/get_articles'
       },
       limit: 10
     }
@@ -48,21 +48,18 @@ export default {
     authorId: 'Number',
     tag: 'String'
   },
-  updated () {
-    console.log(this.articles)
-  },
-  created () {
+  mounted () {
     let authorId = typeof this.authorId !== 'undefined'
       ? this.authorId : 0
 
     let tag = typeof this.tag !== 'undefined'
       ? this.tag : ''
 
-    this.$http.post(this.urls.get_articles,
+    this.$http.post(this.urls.getArticles,
       'author_id=' + authorId +
       '&tag=' + tag +
       '&limit=' + this.limit +
-      '&offset' + this.articles.length,
+      '&offset=' + this.articles.length,
       {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
@@ -70,18 +67,14 @@ export default {
       }
     ).then(function (r) {
       r = JSON.parse(r.bodyText)
-      console.log(r)
       if (r.status === 200) {
         for (let i in r.data) {
           this.articles.push(r.data[i])
         }
         this.isEmpty = this.articles === 0
+      } else if (r.status === 500) {
+        this.$root.$emit('alarm', {err: r.data, timeout: 5000})
       }
-    }, function (e) {
-      if (!e.statusText) {
-        e.statusText = 'Some kind of error happened'
-      }
-      this.$root.$emit('alarm', e.statusText)
     })
   }
 }

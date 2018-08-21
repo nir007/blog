@@ -57,8 +57,8 @@ export default {
   },
   mounted () {
     this.$http.post(this.urls.getPersons,
-      '&limit=' + this.limit +
-      '&offset' + this.persons.length,
+      'limit=' + this.limit +
+      '&offset=' + this.persons.length,
       {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
@@ -67,14 +67,15 @@ export default {
     )
       .then(function (r) {
         r = JSON.parse(r.bodyText)
-        console.log(r)
         if (r.status === 200) {
           for (let i in r.data) {
             this.persons.push(r.data[i])
           }
+        } else if (r.status === 500) {
+          this.$root.$emit('alarm', {err: r.data, timeout: 5000})
         }
-      }, function (e) {
-        alert(e.statusText)
+      }, function () {
+        this.$root.$emit('alarm', 'Some kind of error happened')
       })
 
     this.$http.post(this.urls.isLogged)

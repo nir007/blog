@@ -53,3 +53,7 @@ a {
   color: #548eaa;
   text-decoration: none;
 }
+
+.hiddenBlock {
+  background: #e0e0e0;
+}

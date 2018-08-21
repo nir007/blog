@@ -3,7 +3,6 @@ package services
 import (
 	"database/sql"
 	_ "github.com/lib/pq"
-	"log"
 	"github.com/kylelemons/go-gypsy/yaml"
 	"fmt"
 )
@@ -33,7 +32,7 @@ func init() {
 	defer func() {
 		if err := recover(); err != nil {
 			db.Close()
-			fmt.Println(err)
+			fmt.Println("vasha")
 		}
 	}()
 
@@ -69,8 +68,9 @@ func (p *Pg) ExecuteSelect(query string, args ...interface{}) (rows *sql.Rows, e
 	stmt, err := db.Prepare(query)
 
 	if err != nil {
-		log.Fatal("Prepare failed:", err.Error())
+		return rows, err
 	}
+
 	defer stmt.Close()
 
 	rows, err = stmt.Query(args...)

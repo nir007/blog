@@ -70,7 +70,7 @@ func (a *Article) Add() {
 	)
 }
 
-func (a *Article) Update() {
+func (a *Article) Update() (id int32, err error ) {
 	pg := services.Pg{}
 	tags := map[string]string {}
 	var reg = regexp.MustCompile(`[#|$|%|^|&|*|(|)|@|!|?|>|<|/]`)
@@ -81,13 +81,16 @@ func (a *Article) Update() {
 		tags[fmt.Sprintf("%s", key)] = k
 	}
 
-	tagsJson, err := json.Marshal(tags)
+	var tagsJson []byte
+	var errParse error
 
-	if err != nil {
+	tagsJson, errParse = json.Marshal(tags)
+
+	if errParse != nil {
 		tagsJson = nil
 	}
 
-	pg.Execute(
+	id, err = pg.Execute(
 		updateArticle,
 		a.Title,
 		a.Text,
@@ -96,9 +99,11 @@ func (a *Article) Update() {
 		a.Id,
 		a.AuthorId,
 	)
+
+	return id, err
 }
 
-func (a *Article) Get(authorId, perPage, skip int64, tag string) (result []Article) {
+func (a *Article) Get(authorId, perPage, skip int64, tag string) (result []Article, err error) {
 	pg := services.Pg{}
 	var rows *sql.Rows
 
@@ -107,62 +112,62 @@ func (a *Article) Get(authorId, perPage, skip int64, tag string) (result []Artic
 	}
 
 	if authorId > 0 {
-		rows, _ = pg.ExecuteSelect(selectForAuthor, authorId, perPage, skip)
+		rows, err = pg.ExecuteSelect(selectForAuthor, authorId, perPage, skip)
 	} else if tag != "" {
-		rows, _ = pg.ExecuteSelect(selectArticlesByTag, tag, perPage, skip)
+		rows, err = pg.ExecuteSelect(selectArticlesByTag, tag, perPage, skip)
 	} else {
-		rows, _ = pg.ExecuteSelect(selectArticles, perPage, skip)
+		rows, err = pg.ExecuteSelect(selectArticles, perPage, skip)
 	}
 
-	for rows.Next() {
-		article := Article{}
-		var id int
-		var authorId int
-		var title string
-		var text string
-		var tags sql.NullString
-		var createdAt time.Time
-		var published rune
+	if err == nil {
+		for rows.Next() {
+			article := Article{}
+			var id int
+			var authorId int
+			var title string
+			var text string
+			var tags sql.NullString
+			var createdAt time.Time
+			var published rune
 
-		err := rows.Scan(
-			&id,
-			&authorId,
-			&title,
-			&text,
-			&tags,
-			&createdAt,
-			&published,
-		)
+			err = rows.Scan(
+				&id,
+				&authorId,
+				&title,
+				&text,
+				&tags,
+				&createdAt,
+				&published,
+			)
 
-		if err != nil {
-			panic(err)
+			tagsMap := map[string]string {}
+
+			if tags.Valid {
+				json.Unmarshal([]byte(tags.String), &tagsMap)
+				article.Tags = tagsMap
+			}
+
+			article.Id = int32(id)
+			article.AuthorId = int32(authorId)
+			article.Title = title
+			article.Text = text
+			article.Tags = tagsMap
+			article.CreatedAt = createdAt
+			article.Published = published
+
+			result = append(result, article)
 		}
-
-		t := map[string]string {}
-
-		if tags.Valid {
-			json.Unmarshal([]byte(tags.String), &t)
-			article.Tags = t
-		}
-
-		article.Id = int32(id)
-		article.AuthorId = int32(authorId)
-		article.Title = title
-		article.Text = text
-		article.Tags = t
-		article.CreatedAt = createdAt
-		article.Published = published
-
-		result = append(result, article)
 	}
 
-	return result
+	return result, err
 }
 
-func (a *Article) One(id int64) {
+func (a *Article) One(id int64) (err error) {
 	pg := services.Pg{}
-	rows, _:= pg.ExecuteSelect(selectArticle, id)
-	var nullableTags sql.NullString
+	var rows *sql.Rows
+	var nullTags sql.NullString
+
+	rows, err = pg.ExecuteSelect(selectArticle, id)
 
 	for rows.Next() {
 		rows.Scan(
@@ -170,29 +175,33 @@ func (a *Article) One(id int64) {
 			&a.AuthorId,
 			&a.Title,
 			&a.Text,
-			&nullableTags,
+			&nullTags,
 			&a.CreatedAt,
 			&a.Published,
 		)
 
-		t := map[string]string {}
+		tagsMap := map[string]string {}
 
-		if nullableTags.Valid {
-			json.Unmarshal([]byte(nullableTags.String), &t)
-			a.Tags = t
+		if nullTags.Valid {
+			json.Unmarshal([]byte(nullTags.String), &tagsMap)
+			a.Tags = tagsMap
 		}
 	}
+
+	return err
 }
 
-func (a *Article) GetTags() (res map[string] string) {
+func (a *Article) GetTags() (result map[string] string, err error) {
 	pg := services.Pg{}
-	rows, _ := pg.ExecuteSelect(selectTags)
+	rows, err := pg.ExecuteSelect(selectTags)
 
-	for rows.Next() {
-		var jsonVal string
-		rows.Scan(&jsonVal)
-		json.Unmarshal([]byte(jsonVal), &res)
+	if err == nil {
+		for rows.Next() {
+			var jsonVal string
+			rows.Scan(&jsonVal)
+			json.Unmarshal([]byte(jsonVal), &result)
+		}
 	}
 
-	return res
+	return result, err
 }

@@ -30,7 +30,7 @@ export default {
           this.tags = r.data
         }
       }, function (e) {
-        alert(e.statusText)
+        console.log(e)
       })
   }
 }
