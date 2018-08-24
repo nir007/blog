@@ -23,31 +23,24 @@
 <script>
 import Articles from '../parts/Articles.vue'
 import Tags from '../parts/Tags.vue'
+import AuthHandler from '../mixins/AuthHandler.vue'
+import ResponseHandler from '../mixins/ResponseHandler.vue'
 export default {
+  mixins: [ResponseHandler, AuthHandler],
   data () {
     return {
       tag: '',
-      urls: {
-        isLogged: '/aj_is_logged'
-      },
       params: {
         'tag': 'string'
       }
     }
   },
   components: {
-    'articles': Articles,
-    'tags': Tags
+    'tags': Tags,
+    'articles': Articles
   },
   created () {
     this.tag = this.$route.params.tag
-  },
-  mounted () {
-    this.$http.post(this.urls.isLogged)
-      .then(function (r) {
-        r = JSON.parse(r.bodyText)
-        this.$root.$emit('nav_top_rebuild', r.data)
-      })
   }
 }
 </script>

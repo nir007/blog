@@ -33,7 +33,9 @@
 </template>
 
 <script>
+import ResponseHandler from '../mixins/ResponseHandler.vue'
 export default {
+  mixins: [ResponseHandler],
   data () {
     return {
       isEmpty: false,
@@ -72,9 +74,11 @@ export default {
           this.articles.push(r.data[i])
         }
         this.isEmpty = this.articles === 0
-      } else if (r.status === 500) {
-        this.$root.$emit('alarm', {err: r.data, timeout: 5000})
+      } else {
+        this.responseFailHandle(r)
       }
+    }, function () {
+      this.responseFailHandle({status: 500, data: '500 internal server error'})
     })
   }
 }

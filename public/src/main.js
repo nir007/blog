@@ -5,7 +5,7 @@ import App from './App'
 import NavTop from './components/parts/NavTop'
 import BootstrapVue from 'bootstrap-vue'
 import router from './router'
-import Alarm from './components/parts/Alarm.vue'
+import Notification from './components/parts/notifications/Notification.vue'
 import Warning from './components/modals/Warning.vue'
 
 Vue.use(BootstrapVue)
@@ -13,13 +13,24 @@ Vue.use(BootstrapVue)
 Vue.config.productionTip = false
 
 Vue.component('nav-top', NavTop)
-Vue.component('alarm', Alarm)
+Vue.component('notification', Notification)
 Vue.component('m-warning', Warning)
+
+Vue.mixin({
+  created: function () {
+    var myOption = this.$options.myOption
+    if (myOption) {
+      console.log(myOption)
+    }
+  }
+})
+
+Vue.extend()
 
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
   router,
   components: { App },
-  template: '<div><alarm></alarm><m-warning></m-warning><nav-top></nav-top><div class="container"><App/></div></div>'
+  template: '<div><notification></notification><m-warning></m-warning><nav-top></nav-top><div class="container"><App/></div></div>'
 })

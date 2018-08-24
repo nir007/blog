@@ -47,8 +47,11 @@
 <script>
 import Tags from '../parts/Tags.vue'
 import Articles from '../parts/Articles.vue'
+import AuthHandler from '../mixins/AuthHandler.vue'
+import ResponseHandler from '../mixins/ResponseHandler.vue'
 export default {
   name: 'Person',
+  mixins: [ResponseHandler, AuthHandler],
   data () {
     return {
       id: 0,
@@ -61,8 +64,7 @@ export default {
       userNotFound: false,
       avatarPath: '/static/assets/img/',
       urls: {
-        getPerson: '/aj_get_person',
-        isLogged: '/aj_is_logged'
+        getPerson: '/aj_get_person'
       }
     }
   },
@@ -94,15 +96,11 @@ export default {
           this.isOwner = r.data.is_owner
         } else {
           this.userNotFound = true
+          this.responseFailHandle(r)
         }
       }, function () {
         this.userNotFound = true
-      })
-
-    this.$http.post(this.urls.isLogged)
-      .then(function (r) {
-        r = JSON.parse(r.bodyText)
-        this.$root.$emit('nav_top_rebuild', r.data)
+        this.responseFailHandle({status: 500, data: '500 internal server error'})
       })
   }
 }

@@ -87,8 +87,11 @@
 <script>
 import Markdown from 'vue-markdown'
 import Prism from 'prismjs'
+import ResponseHandler from '../mixins/ResponseHandler.vue'
+import AuthHandler from '../mixins/AuthHandler.vue'
 export default {
   name: 'Article',
+  mixins: [ResponseHandler, AuthHandler],
   data () {
     return {
       article: {
@@ -108,8 +111,7 @@ export default {
       isLogged: false,
       notFound: false,
       urls: {
-        getArticle: 'aj_get_article',
-        isLogged: '/aj_is_logged'
+        getArticle: 'aj_get_article'
       }
     }
   },
@@ -141,9 +143,11 @@ export default {
           this.author.nickName = r.data.author.nick_name
         } else {
           this.notFound = true
+          this.responseFailHandle(r)
         }
       }, function () {
         this.notFound = true
+        this.responseFailHandle({status: 500, data: '500 internal server error'})
       })
   },
   components: {

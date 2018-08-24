@@ -138,22 +138,12 @@
 </template>
 
 <script>
+import AuthHandler from '../mixins/AuthHandler.vue'
 export default {
   name: 'Markdown',
+  mixins: [AuthHandler],
   data () {
-    return {
-      isLogged: false,
-      urls: {
-        isLogged: '/aj_is_logged'
-      }
-    }
-  },
-  mounted () {
-    this.$http.post(this.urls.isLogged)
-      .then(function (r) {
-        r = JSON.parse(r.bodyText)
-        this.$root.$emit('nav_top_rebuild', r.data)
-      })
+    return {}
   }
 }
 </script>

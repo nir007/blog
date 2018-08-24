@@ -62,7 +62,11 @@
 import Switches from 'vue-switches'
 import Markdown from 'vue-markdown'
 import Prism from 'prismjs'
+import AuthHandler from '../mixins/AuthHandler.vue'
+import ResponseHandler from '../mixins/ResponseHandler.vue'
 export default {
+  name: 'NewArticle',
+  mixins: [ResponseHandler, AuthHandler],
   data () {
     return {
       title: '',
@@ -116,23 +120,15 @@ export default {
         if (r.status === 200) {
           location.href = '#/a/' + r.data.id
         } else {
-          this.$root.$emit('alarm', r.data)
+          this.responseFailHandle(r)
         }
       }, function () {
-        this.$root.$emit('alarm', 'Some kind of error happened')
+        this.responseFailHandle({status: 500, data: '500 internal server error'})
       })
     }
   },
   updated () {
     Prism.highlightAll()
-  },
-  mounted () {
-    this.$http.post(this.urls.isLogged)
-      .then(function (r) {
-        r = JSON.parse(r.bodyText)
-        this.isLogged = r.data
-        this.$root.$emit('nav_top_rebuild', r.data)
-      })
   }
 }
 </script>

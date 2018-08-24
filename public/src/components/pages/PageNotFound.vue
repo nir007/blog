@@ -8,7 +8,9 @@
 </template>
 
 <script>
+import AuthHandler from '../mixins/AuthHandler.vue'
 export default {
-  name: 'PageNotFound'
+  name: 'PageNotFound',
+  mixins: [AuthHandler]
 }
 </script>

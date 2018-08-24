@@ -68,11 +68,11 @@ func ajIsLoggedAction(w http.ResponseWriter, r *http.Request) {
 	uid, err := r.Cookie("uuid")
 
 	if err == nil {
-		_, err := getLoggedUser(uid.Value)
+		_, err2 := getLoggedUser(uid.Value)
 
-		if err != nil {
+		if err2 != nil {
 			response.Status = 500
-			response.Data = err
+			response.Data = "Какая то хуйня"
 		}
 	}
 
@@ -297,7 +297,9 @@ func ajAddUserAction(w http.ResponseWriter, r *http.Request) {
 		Uuid:     uid.String(),
 	}
 
-	newUser.Add()
+	errAdd := newUser.Add()
+
+	fmt.Println(errAdd)
 
 	if newUser.Id != 0 {
 		response.Status = 200
@@ -313,7 +315,7 @@ func ajAddUserAction(w http.ResponseWriter, r *http.Request) {
 		loggedUsers[newUser.Uuid] = newUser
 	} else {
 		response.Status = 500
-		response.Data = "nickname already exists"
+		response.Data = errAdd
 	}
 
 	w.Header().Set("Content-Type", contentTypeJson)

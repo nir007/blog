@@ -43,14 +43,16 @@
 </template>
 
 <script>
+import AuthHandler from '../mixins/AuthHandler.vue'
+import ResponseHandler from '../mixins/ResponseHandler.vue'
 export default {
   name: 'Persons',
+  mixins: [ResponseHandler, AuthHandler],
   data () {
     return {
       persons: [],
       avatarPath: '/static/assets/img/',
       urls: {
-        isLogged: '/aj_is_logged',
         getPersons: '/aj_get_persons'
       }
     }
@@ -71,17 +73,11 @@ export default {
           for (let i in r.data) {
             this.persons.push(r.data[i])
           }
-        } else if (r.status === 500) {
-          this.$root.$emit('alarm', {err: r.data, timeout: 5000})
+        } else {
+          this.responseFailHandle(r)
         }
       }, function () {
-        this.$root.$emit('alarm', 'Some kind of error happened')
-      })
-
-    this.$http.post(this.urls.isLogged)
-      .then(function (r) {
-        r = JSON.parse(r.bodyText)
-        this.$root.$emit('nav_top_rebuild', r.data)
+        this.responseFailHandle({status: 500, data: '500 internal server error'})
       })
   }
 }
