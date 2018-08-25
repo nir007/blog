@@ -32,5 +32,5 @@ new Vue({
   el: '#app',
   router,
   components: { App },
-  template: '<div><notification></notification><m-warning></m-warning><nav-top></nav-top><div class="container"><App/></div></div>'
+  template: '<div><notification/><m-warning/><nav-top/><div class="container"><App/></div></div>'
 })

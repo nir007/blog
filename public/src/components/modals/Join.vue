@@ -39,8 +39,10 @@
 </template>
 
 <script>
+import ResponseHandler from '../mixins/ResponseHandler.vue'
 export default {
   name: 'Join',
+  mixins: [ResponseHandler],
   data () {
     return {
       person: '',
@@ -65,9 +67,16 @@ export default {
         }
       ).then(function (r) {
         r = JSON.parse(r.bodyText)
-        this.nickNameExists = r.data
-      }, function () {
-        this.$root.$emit('alarm', 'Some kind of error happened')
+        if (r.status === 200) {
+          this.nickNameExists = r.data
+        } else {
+          this.responseFailHandle(r)
+        }
+      }, function (e) {
+        if (e != null && typeof e === 'object') {
+          let err = 'data' in e ? e.data : 'Some internal server error'
+          this.responseFailHandle({status: 500, data: err})
+        }
       })
     },
     handleOk: function () {
@@ -96,7 +105,7 @@ export default {
       this.$http.post(this.urls.join,
         {
           person: this.person,
-          nickName: this.nickName,
+          nick_name: this.nickName,
           avatar: this.avatar
         },
         {
@@ -110,10 +119,10 @@ export default {
           if (r.status === 200) {
             location.href = '#/person/'
           } else {
-            this.$root.$emit('alarm', {err: r.data, timeout: 5000})
+            this.responseFailHandle({status: r.status, err: r.data})
           }
         }, function () {
-          this.$root.$emit('alarm', 'Some kind of error happened')
+          this.responseFailHandle({status: 500, err: 'Internal server error'})
         })
     },
     clearForm: function () {

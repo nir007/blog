@@ -12,8 +12,9 @@
         </div>
         <div class="col-md-9 text-left">
           <p>
+            nickName:
             <a :href="'#/person/' + person.id">
-              nickName: {{person.nick_name}}
+              {{person.nick_name}}
             </a>
           </p>
           <p>about: {{person.person}}</p>
@@ -27,17 +28,7 @@
     </div>
   </div>
   <div class="col-lg-4">
-    <div class="card my-4">
-      <h5 class="card-header">Search</h5>
-      <div class="card-body">
-        <div class="input-group">
-          <input type="text" class="form-control" placeholder="Search for...">
-          <div class="input-group-btn">
-            <button class="btn btn-secondary" type="button">Go!</button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <search></search>
   </div>
 </div>
 </template>
@@ -45,6 +36,7 @@
 <script>
 import AuthHandler from '../mixins/AuthHandler.vue'
 import ResponseHandler from '../mixins/ResponseHandler.vue'
+import Search from '../parts/Search.vue'
 export default {
   name: 'Persons',
   mixins: [ResponseHandler, AuthHandler],
@@ -56,6 +48,9 @@ export default {
         getPersons: '/aj_get_persons'
       }
     }
+  },
+  components: {
+    'search': Search
   },
   mounted () {
     this.$http.post(this.urls.getPersons,

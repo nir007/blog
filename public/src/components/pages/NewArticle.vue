@@ -71,12 +71,12 @@ export default {
     return {
       title: '',
       tags: '',
-      published: false,
       text: '',
+      published: false,
       isLogged: false,
+      loggedUser: false,
       urls: {
-        addArticle: '/aj_add_article',
-        isLogged: '/aj_is_logged'
+        addArticle: '/aj_add_article'
       },
       warnings: []
     }
@@ -129,6 +129,17 @@ export default {
   },
   updated () {
     Prism.highlightAll()
+  },
+  mounted () {
+    var self = this
+    this.$root.$on('check_is_logged', function (user) {
+      if (user && 'id' in user && user.id > 0) {
+        self.isLogged = true
+        self.loggedUser = user
+      } else {
+        self.isLogged = false
+      }
+    })
   }
 }
 </script>

@@ -75,7 +75,7 @@ export default {
   },
   mounted () {
     var self = this
-    this.$root.$on('nav_top_rebuild', function (user) {
+    this.$root.$on('check_is_logged', function (user) {
       if (user && 'id' in user && user.id > 0) {
         self.isLogged = true
         self.personId = user.id

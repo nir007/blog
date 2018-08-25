@@ -61,8 +61,6 @@ export default {
         } else {
           this.$root.$emit('alarm', {err: r.data, timeout: 5000})
         }
-      }, function () {
-        this.$root.$emit('alarm', 'Some kind of error happened')
       })
     }
   },

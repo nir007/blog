@@ -1,6 +1,6 @@
 <template>
   <div class="row">
-    <div class="col-lg-8">
+    <div class="col-lg-12">
       <br>
       <div v-if="!notFound && (article.published > 0 || article.isOwner)">
         <div class="row">
@@ -68,19 +68,6 @@
         <img src="/static/assets/img/404-error.jpg" alt="404 not found" >
       </div>
     </div>
-    <div class="col-lg-4">
-      <div class="card my-4">
-        <h5 class="card-header">Search</h5>
-        <div class="card-body">
-          <div class="input-group">
-            <input type="text" class="form-control" placeholder="Search for...">
-            <span class="input-group-btn">
-              <button class="btn btn-secondary" type="button">Go!</button>
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -129,7 +116,6 @@ export default {
       })
       .then(function (r) {
         r = JSON.parse(r.bodyText)
-        console.log(r)
         if (r.status === 200) {
           this.article.id = r.data.article.id
           this.article.title = r.data.article.title
@@ -152,14 +138,6 @@ export default {
   },
   components: {
     'vue-markdown': Markdown
-  },
-  mounted () {
-    this.$http.post(this.urls.isLogged)
-      .then(function (r) {
-        r = JSON.parse(r.bodyText)
-        this.isLogged = r.data
-        this.$root.$emit('nav_top_rebuild', r.data)
-      })
   }
 }
 </script>

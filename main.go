@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	tpl "html/template"
-	"github.com/satori/go.uuid"
 	"net/http"
 	"strconv"
 	"time"
 	"fmt"
+	"github.com/satori/go.uuid"
 )
 
 const cookieNameId = "uuid"
@@ -25,6 +25,7 @@ func main() {
 	rp.Handler(http.StripPrefix("/static/", fs))
 
 	router.HandleFunc("/", indexAction)
+	router.HandleFunc("/logout", logout)
 
 	router.HandleFunc("/aj_add_user", ajAddUserAction)
 	router.HandleFunc("/aj_get_tags", ajGetTags)
@@ -49,6 +50,19 @@ func indexAction(w http.ResponseWriter, r *http.Request) {
 
 	if errTpl != nil {
 		panic(errTpl)
+	}
+}
+
+func logout(w http.ResponseWriter, r *http.Request) {
+	uid, err := r.Cookie("uuid")
+
+	if err == nil {
+		cookie := http.Cookie{
+			Name:    cookieNameId,
+			Value:   uid.Value,
+			Expires: time.Now().Add(-1),
+		}
+		http.SetCookie(w, &cookie)
 	}
 }
 
@@ -256,16 +270,15 @@ func ajGetArticlesAction(w http.ResponseWriter, r *http.Request) {
 
 func ajCheckNickNameAction(w http.ResponseWriter, r *http.Request) {
 	response := models.Response{}
-
 	nickName := r.FormValue("nickname")
 	user := models.User{NickName: nickName}
 
-	if exists, err := user.NickNameExists(); err != nil && exists {
+	if exists, err := user.NickNameExists(); err == nil {
 		response.Status = 200
-		response.Data = true
+		response.Data = exists
 	} else {
 		response.Status = 500
-		response.Data = false
+		response.Data = err
 	}
 
 	w.Header().Set("Content-Type", contentTypeJson)
@@ -275,47 +288,41 @@ func ajCheckNickNameAction(w http.ResponseWriter, r *http.Request) {
 func ajAddUserAction(w http.ResponseWriter, r *http.Request) {
 	response := models.Response{}
 
-	if r.Body == nil {
-		http.Error(w, "Body is empty", 400)
-		return
-	}
-
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 
 	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
+		response.Status = 500
+		response.Data = err.Error()
+	} else {
+		uid := uuid.Must(uuid.NewV4())
 
-	uid := uuid.Must(uuid.NewV4())
-
-	newUser := models.User{
-		Person:   user.Person,
-		NickName: user.NickName,
-		Avatar:   user.Avatar,
-		Uuid:     uid.String(),
-	}
-
-	errAdd := newUser.Add()
-
-	fmt.Println(errAdd)
-
-	if newUser.Id != 0 {
-		response.Status = 200
-		response.Data = newUser
-
-		cookie := http.Cookie{
-			Name:    cookieNameId,
-			Value:   newUser.Uuid,
-			Expires: time.Now().Add(360 * 24 * time.Hour),
+		newUser := models.User{
+			Person:   user.Person,
+			NickName: user.NickName,
+			Avatar:   user.Avatar,
+			Uuid:     uid.String(),
 		}
 
-		http.SetCookie(w, &cookie)
-		loggedUsers[newUser.Uuid] = newUser
-	} else {
-		response.Status = 500
-		response.Data = errAdd
+		if errAdd := newUser.Add(); errAdd != nil {
+			response.Status = 500
+			response.Data = newUser
+		} else if newUser.Id == 0 {
+			response.Status = 403
+			response.Data = "nickName already used"
+		} else {
+			cookie := http.Cookie{
+				Name:    cookieNameId,
+				Value:   newUser.Uuid,
+				Expires: time.Now().Add(360 * 24 * time.Hour),
+			}
+
+			http.SetCookie(w, &cookie)
+			loggedUsers[newUser.Uuid] = newUser
+
+			response.Status = 200
+			response.Data = newUser
+		}
 	}
 
 	w.Header().Set("Content-Type", contentTypeJson)
@@ -336,6 +343,7 @@ func ajSignInAction(w http.ResponseWriter, r *http.Request) {
 			Expires: time.Now().Add(360 * 24 * time.Hour),
 		}
 		http.SetCookie(w, &cookie)
+
 		data, _ := json.Marshal(user)
 
 		response.Status = 200
@@ -353,33 +361,38 @@ func ajSignInAction(w http.ResponseWriter, r *http.Request) {
 }
 
 func ajGetPersonAction(w http.ResponseWriter, r *http.Request) {
-	response := models.Response{Status: 500, Data: false}
-	var user models.User
+	response := models.Response{Status: 404, Data: false}
 	id := r.FormValue("id")
-
 	personId, _ := strconv.ParseInt(id, 10, 64)
+	var user models.User
+	uuidCookie, errCookie := r.Cookie("uuid")
 
-	uid, err := r.Cookie("uuid")
-
-	if personId == 0 {
-		user = models.User{Uuid: uid.Value}
+	if personId > 0 {
+		user = models.User{}
+		if err := user.One(personId); err != nil {
+			response.Status = 500
+			response.Data = err
+		} else if user.Id == 0 {
+			response.Status = 404
+			response.Data = "User not found"
+		} else {
+			if errCookie == nil && uuidCookie.Value == user.Uuid {
+				user.IsOwner = true
+			} else {
+				user.Uuid = ""
+			}
+			response.Status = 200
+			response.Data = user
+		}
+	} else if errCookie == nil {
+		user = models.User{Uuid: uuidCookie.Value}
+		user.IsOwner = true
 
 		if exists, err := user.Exists(); err == nil && exists {
 			loggedUsers[user.Uuid] = user
+			response.Status = 200
+			response.Data = user
 		}
-	} else {
-		user = models.User{}
-		user.One(personId)
-	}
-
-	if user.Id > 0 {
-		if err == nil && uid.Value == user.Uuid {
-			user.IsOwner = true
-		} else {
-			user.Uuid = ""
-		}
-		response.Status = 200
-		response.Data = user
 	}
 
 	w.Header().Set("Content-Type", contentTypeJson)

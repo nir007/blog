@@ -29,8 +29,6 @@ export default {
         if (r.status === 200) {
           this.tags = r.data
         }
-      }, function (e) {
-        console.log(e)
       })
   }
 }

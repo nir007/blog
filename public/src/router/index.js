@@ -8,6 +8,7 @@ import EditArticle from '@/components/pages/EditArticle'
 import Person from '@/components/pages/Person'
 import Persons from '@/components/pages/Persons'
 import Markdown from '@/components/pages/Markdown'
+import Founded from '@/components/pages/Founded'
 import PageNotFound from '@/components/pages/PageNotFound'
 
 Vue.use(Resource)
@@ -55,6 +56,11 @@ export default new Router({
       path: '/markdown',
       name: 'Markdown',
       component: Markdown
+    },
+    {
+      path: '/founded',
+      name: 'Founded',
+      component: Founded
     },
     {
       path: '*',

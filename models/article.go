@@ -10,25 +10,25 @@ import (
 	"regexp"
 )
 
-const insertArticle = `INSERT INTO article(author_id, title, text, tags, created_at, published)
+const insertArticle = `INSERT INTO db_schema.article(author_id, title, text, tags, created_at, published)
 	VALUES($1, $2, $3, $4, NOW(), $5) RETURNING id`
 
 const selectArticles = `SELECT id, author_id, title, text, tags, created_at, published 
-	FROM article WHERE published = 1::bit ORDER BY created_at DESC LIMIT $1 OFFSET $2`
+	FROM db_schema.article WHERE published = 1::bit ORDER BY created_at DESC LIMIT $1 OFFSET $2`
 
 const selectArticlesByTag = `SELECT id, author_id, title, text, tags, created_at, published 
-	FROM article WHERE tags?$1 AND published = 1::bit ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	FROM db_schema.article WHERE tags?$1 AND published = 1::bit ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 
 const selectArticle = `SELECT id, author_id, title, text, tags, created_at, published 
-	FROM article WHERE id = $1`
+	FROM db_schema.article WHERE id = $1`
 
 const selectTags = `SELECT DISTINCT tags 
-	FROM article WHERE published = 1::bit`
+	FROM db_schema.article WHERE published = 1::bit`
 
 const selectForAuthor = `SELECT id, author_id, title, text, tags, created_at, published 
-	FROM article WHERE author_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	FROM db_schema.article WHERE author_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 
-const updateArticle = `UPDATE article SET title = $1, text = $2, tags = $3, published = $4
+const updateArticle = `UPDATE db_schema.article SET title = $1, text = $2, tags = $3, published = $4
 	WHERE id = $5 AND author_id = $6 RETURNING id`
 
 type Article struct {

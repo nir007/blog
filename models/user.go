@@ -6,19 +6,19 @@ import (
 	"database/sql"
 )
 
-const insertUser = `INSERT INTO public."user"(person, nick_name, avatar, uuid, created_at)
+const insertUser = `INSERT INTO db_schema."user"(person, nick_name, avatar, uuid, created_at)
 	VALUES($1, $2, $3, $4, NOW()) RETURNING id`
 
 const selectUser = `SELECT id, person, nick_name, avatar, uuid, created_at 
-	FROM public."user" WHERE id = $1`
+	FROM db_schema."user" WHERE id = $1`
 
 const selectUsers = `SELECT id, person, nick_name, avatar, created_at 
-	FROM public."user"`
+	FROM db_schema."user"`
 
 const selectUserByUuid = `SELECT id, person, nick_name, avatar, uuid, created_at 
-	FROM public."user" WHERE uuid = $1`
+	FROM db_schema."user" WHERE uuid = $1`
 
-const findNickName = `SELECT count(*) AS count FROM public."user" WHERE nick_name = $1`
+const findNickName = `SELECT count(*) AS count FROM db_schema."user" WHERE nick_name = $1`
 
 var pg services.Pg
 
@@ -93,15 +93,17 @@ func (u *User) One(id int64) (err error) {
 	var rows *sql.Rows
 	rows, err = pg.ExecuteSelect(selectUser, id)
 
-	for rows.Next() {
-		rows.Scan(
-			&u.Id,
-			&u.Person,
-			&u.NickName,
-			&u.Avatar,
-			&u.Uuid,
-			&u.CreatedAt,
-		)
+	if err == nil {
+		for rows.Next() {
+			rows.Scan(
+				&u.Id,
+				&u.Person,
+				&u.NickName,
+				&u.Avatar,
+				&u.Uuid,
+				&u.CreatedAt,
+			)
+		}
 	}
 
 	return err

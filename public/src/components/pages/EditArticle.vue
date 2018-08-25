@@ -152,7 +152,6 @@ export default {
       })
       .then(function (r) {
         r = JSON.parse(r.bodyText)
-        console.log(r)
         if (r.status === 200) {
           this.id = r.data.article.id
           this.authorId = r.data.article.author_id
@@ -173,6 +172,18 @@ export default {
         this.notFound = true
         this.responseFailHandle({status: 500, data: '500 internal server error'})
       })
+  },
+  mounted () {
+    var self = this
+    this.$root.$on('check_is_logged', function (user) {
+      if (user && 'id' in user && user.id > 0) {
+        self.isLogged = true
+        self.loggedUser = user
+      } else {
+        self.isLogged = false
+      }
+    })
   }
+
 }
 </script>
