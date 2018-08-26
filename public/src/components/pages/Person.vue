@@ -25,7 +25,7 @@
           </div>
         </div>
       </div>
-      <articles v-if="loadArticles" v-bind:author-id="id"></articles>
+      <articles v-if="userLoaded" v-bind:author-id="id"></articles>
     </div>
     <div v-if="userNotFound" class="text-center">
       <img src="/static/assets/img/no-dead-links.jpg" alt="user not found" >
@@ -34,6 +34,7 @@
   </div>
   <div class="col-lg-4">
     <search></search>
+    <series v-if="userLoaded" v-bind:author-id="id"></series>
     <tags></tags>
   </div>
 </div>
@@ -46,6 +47,7 @@ import AuthHandler from '../mixins/AuthHandler.vue'
 import ResponseHandler from '../mixins/ResponseHandler.vue'
 import Logout from '../mixins/Logout.vue'
 import Search from '../parts/Search.vue'
+import Series from '../parts/series.vue'
 export default {
   name: 'Person',
   mixins: [ResponseHandler, AuthHandler, Logout],
@@ -59,7 +61,7 @@ export default {
       createdAt: '',
       isOwner: false,
       userNotFound: false,
-      loadArticles: false,
+      userLoaded: false,
       avatarPath: '/static/assets/img/',
       urls: {
         getPerson: '/aj_get_person'
@@ -69,12 +71,15 @@ export default {
   components: {
     'articles': Articles,
     'search': Search,
-    'tags': Tags
+    'tags': Tags,
+    'series': Series
   },
   methods: {
     userLogout: function () {
       this.logout()
-      location.href = '#/articles'
+      setTimeout(function () {
+        location.href = '#/articles'
+      }, 500)
     }
   },
   created () {
@@ -99,7 +104,7 @@ export default {
           this.createdAt = r.data.created_at
           this.isOwner = r.data.is_owner
           this.userNotFound = false
-          this.loadArticles = true
+          this.userLoaded = true
         } else {
           this.userNotFound = true
           this.responseFailHandle(r)

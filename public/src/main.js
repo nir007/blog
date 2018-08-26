@@ -4,6 +4,7 @@ import Vue from 'vue'
 import App from './App'
 import NavTop from './components/parts/NavTop'
 import BootstrapVue from 'bootstrap-vue'
+import Draggable from 'vuedraggable'
 import router from './router'
 import Notification from './components/parts/notifications/Notification.vue'
 import Warning from './components/modals/Warning.vue'
@@ -14,6 +15,7 @@ Vue.config.productionTip = false
 
 Vue.component('nav-top', NavTop)
 Vue.component('notification', Notification)
+Vue.component('draggable', Draggable)
 Vue.component('m-warning', Warning)
 
 Vue.mixin({

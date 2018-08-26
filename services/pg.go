@@ -58,7 +58,6 @@ func (p *Pg) Execute(query string, args ...interface{}) (id int32, err error) {
 
 func (p *Pg) ExecuteSelect(query string, args ...interface{}) (rows *sql.Rows, err error){
 	if err = db.Ping(); err != nil {
-		fmt.Println(err)
 		return rows, err
 	}
 

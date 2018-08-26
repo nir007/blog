@@ -28,6 +28,10 @@ const selectTags = `SELECT DISTINCT tags
 const selectForAuthor = `SELECT id, author_id, title, text, tags, created_at, published 
 	FROM db_schema.article WHERE author_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 
+const selectPublishedForAuthor = `SELECT id, author_id, title, text, tags, created_at
+	FROM db_schema.article WHERE author_id = $1 AND published = 1::bit
+	ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+
 const updateArticle = `UPDATE db_schema.article SET title = $1, text = $2, tags = $3, published = $4
 	WHERE id = $5 AND author_id = $6 RETURNING id`
 
@@ -101,6 +105,56 @@ func (a *Article) Update() (id int32, err error ) {
 	)
 
 	return id, err
+}
+
+func (a *Article) GetPublished(authorId, perPage, skip int64) (result []Article, err error) {
+	pg := services.Pg{}
+	var rows *sql.Rows
+
+	if perPage == 0 {
+		perPage = 10
+	}
+
+	rows, err = pg.ExecuteSelect(selectPublishedForAuthor, authorId, perPage, skip)
+
+	if err == nil {
+		for rows.Next() {
+			article := Article{}
+			var id int
+			var authorId int
+			var title string
+			var text string
+			var tags sql.NullString
+			var createdAt time.Time
+
+			err = rows.Scan(
+				&id,
+				&authorId,
+				&title,
+				&text,
+				&tags,
+				&createdAt,
+			)
+
+			tagsMap := map[string]string {}
+
+			if tags.Valid {
+				json.Unmarshal([]byte(tags.String), &tagsMap)
+				article.Tags = tagsMap
+			}
+
+			article.Id = int32(id)
+			article.AuthorId = int32(authorId)
+			article.Title = title
+			article.Text = text
+			article.Tags = tagsMap
+			article.CreatedAt = createdAt
+
+			result = append(result, article)
+		}
+	}
+
+	return result, err
 }
 
 func (a *Article) Get(authorId, perPage, skip int64, tag string) (result []Article, err error) {

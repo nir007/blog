@@ -12,19 +12,20 @@ export default {
         404: 'warning',
         403: 'warning'
       },
-      defaultTimeout: 5000
+      defaultTimeout: 30000
     }
   },
   methods: {
     responseFailHandle: function (err) {
       if (typeof err === 'object') {
         if ('data' in err && err.status in this.codes) {
+          let timeout = 'timeout' in err ? err.timeout : this.defaultTimeout
           this.$root.$emit(
             'alarm',
             {
               err: err.data,
               variant: this.codes[err.status],
-              timeout: this.defaultTimeout
+              timeout: timeout
             }
           )
         }
