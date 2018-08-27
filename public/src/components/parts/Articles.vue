@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div v-if="(articles.length > 0) && item.published || item.is_owner" class="card margin-top22px" v-for="(item) in articles" :key="item.id">
-      <div v-bind:class="{hiddenBlock: !item.published}" class="card-body">
+    <div v-if="!isEmpty" class="card margin-top22px" v-for="(item) in articles" :key="item.id">
+      <div v-if="!isEmpty || (item.isOwner)" v-bind:class="{hiddenBlock: !item.published}" class="card-body">
         <div class="row">
           <div class="col-md-10">
             <h2 class="post__title">
@@ -26,7 +26,7 @@
       </div>
     </div>
     <div v-if="isEmpty" class="text-center">
-      <img src="/static/assets/img/no-dead-links.jpg" alt="user not found" >
+      <img src="/static/assets/img/no-dead-links.jpg" alt="articles not found" >
       <h1 class="text-center">Articles not found</h1>
     </div>
   </div>
@@ -73,7 +73,7 @@ export default {
         for (let i in r.data) {
           this.articles.push(r.data[i])
         }
-        this.isEmpty = this.articles === 0
+        this.isEmpty = this.articles.length === 0
       } else {
         this.responseFailHandle(r)
       }

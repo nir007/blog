@@ -14,6 +14,17 @@ body {
     padding-top: 56px;
   }
 }
+.text {font-size: 22px;}
+.text > p {
+  text-indent: 1.5em;
+  text-align: justify; /* Выравнивание по ширине */
+}
+.text > img {
+  display: inline;
+  text-align: center;
+  max-width: 100%;
+}
+
 .margin-top22px {margin-top: 22px}
 .margin-top20px {margin-top: 20px}
 .margin-top15px {margin-top: 15px}

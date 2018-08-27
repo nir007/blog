@@ -31,16 +31,57 @@
           </div>
         </div>
         <div class="form-group">
-          <draggable v-model="myArray" :options="{group:'people'}" @start="drag=true" @end="drag=false">
-            <transition-group>
-              <b-list-group v-for="element in myArray" :key="element.id">
-                <b-list-group-item button>{{element.name}}</b-list-group-item>
-              </b-list-group>
-            </transition-group>
-            <button slot="footer" @click="loadArticles">Add</button>
+          <h4 class="text-center">Articles of this series: </h4>
+          <draggable v-model="articlesOfSeries" :options="{group:'title'}" @start="drag=true" @end="drag=false">
+            <b-list-group v-for="(item, index) in articlesOfSeries" :key="item.id">
+              <b-list-group-item>
+                <div class="row">
+                  <div class="col-md-1 text-left">
+                    <strong>
+                      <b-badge variant="light" pill>{{index}}</b-badge>
+                    </strong>
+                  </div>
+                  <div class="col-md-9">
+                    {{item.title}}
+                  </div>
+                  <div class="col-md-2 text-right">
+                    <strong v-on:click="removeArticleFromSeries(index)" class="pointer text-danger">
+                      Remove
+                    </strong>
+                  </div>
+                </div>
+              </b-list-group-item>
+            </b-list-group>
           </draggable>
         </div>
-        <articles-user-list v-if="loadArticles"></articles-user-list>
+        <hr class="margin-top20px margin-bottom20px">
+        <div v-if="!isNotArticles" class="form-group">
+          <h4 class="text-center">Select articles: </h4>
+          <b-list-group v-for="(item, index) in articles" :key="item.id">
+            <b-list-group-item>
+              <div class="row">
+                <div class="col-md-1 text-left">
+                  <strong>
+                    <b-badge variant="light" pill>{{index}}</b-badge>
+                  </strong>
+                </div>
+                <div class="col-md-9">
+                  {{item.title}}
+                </div>
+                <div class="col-md-2 text-right">
+                  <strong v-on:click="addArticleToSeries(index)" class="pointer text-success">
+                    Add
+                  </strong>
+                </div>
+              </div>
+            </b-list-group-item>
+          </b-list-group>
+        </div>
+        <div v-if="isNotArticles" class="form-control text-center">
+          <h3 class="text-center">
+            <a href="#/new_article">Crate the first article</a>
+          </h3>
+        </div>
       </div>
     </b-modal>
   </div>
@@ -49,42 +90,42 @@
 <script>
 import Switches from 'vue-switches'
 import ResponseHandler from '../mixins/ResponseHandler.vue'
-import ArticlesUserList from '../parts/ArticlesUserList'
 export default {
   name: 'EditSeries',
   mixins: [ResponseHandler],
   data () {
     return {
-      myArray: [
-        {
-          name: 'Курица',
-          people: 2
-        },
-        {
-          name: 'Питух',
-          people: 1
-        }
-      ],
+      articlesOfSeries: [],
+      articles: [],
+      isNotArticles: false,
       title: '',
       description: '',
       published: false,
       modalShow: false,
-      loadArticles: false,
+      limit: 10,
       warnings: [],
       urls: {
         update: '/update_series',
-        get: '/get_one_series'
+        getOneSeries: '/get_one_series',
+        getArticles: '/get_published_articles'
       }
     }
   },
   components: {
-    'switches': Switches,
-    'articles-user-list': ArticlesUserList
+    'switches': Switches
   },
   props: {
     seriesId: 'Number'
   },
   methods: {
+    addArticleToSeries: function (index) {
+      this.articlesOfSeries.push(this.articles[index])
+      this.articles.splice(index, 1)
+    },
+    removeArticleFromSeries: function (index) {
+      this.articles.push(this.articlesOfSeries[index])
+      this.articlesOfSeries.splice(index, 1)
+    },
     update: function () {
       if (!this.title) {
         this.warnings.push('enter title')
@@ -138,6 +179,26 @@ export default {
     var self = this
     this.$root.$on('init_edit_series', function () {
       self.$refs.edit_series.show()
+    })
+
+    this.$http.post(this.urls.getArticles,
+      'limit=' + this.limit +
+      '&offset=' + this.articles.length,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        }
+      }
+    ).then(function (r) {
+      r = JSON.parse(r.bodyText)
+      if (r.status === 200) {
+        for (let i in r.data) {
+          this.articles.push(r.data[i])
+        }
+        this.isNotArticles = this.articles.length === 0
+      } else {
+        this.responseFailHandle(r)
+      }
     })
   }
 }

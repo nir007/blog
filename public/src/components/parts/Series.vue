@@ -7,15 +7,24 @@
       <div v-if="series.length > 0">
         <b-list-group>
           <b-list-group-item v-for="(item) in series" :key="item.id" class="flex-column align-items-start">
-            <div v-bind:title="item.count + ' articles'" class="d-flex w-100 justify-content-between">
-              <h5 class="mb-1">{{item.title}}</h5>
-              <small v-on:click="initEditSeries" class="pointer">
-                Edit
-              </small>
+            <div v-bind:title="item.count + ' articles'">
+              <div class="row">
+                <div class="col-md-8">
+                  <h5 class="mb-1">{{item.title}}</h5>
+                  <p class="mb-1">
+                    {{item.description}}
+                  </p>
+                </div>
+                <div class="col-md-4 text-right">
+                  <p v-on:click="initEditSeries" class="pointer text-info">
+                    <strong>Edit</strong>
+                  </p>
+                  <p v-on:click="initRemoveSeries" class="pointer text-danger">
+                    <strong>Remove</strong>
+                  </p>
+                </div>
+              </div>
             </div>
-            <p class="mb-1">
-              {{item.description}}
-            </p>
           </b-list-group-item>
         </b-list-group>
       </div>
@@ -53,8 +62,10 @@ export default {
       this.$root.$emit('init_create_series')
     },
     initEditSeries: function () {
-      alert('SKA')
       this.$root.$emit('init_edit_series')
+    },
+    initRemoveSeries: function () {
+      alert('remove')
     },
     getSeries: function () {
       this.$http.post(this.url, 'author_id=' + this.authorId, {
