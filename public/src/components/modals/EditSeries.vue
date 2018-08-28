@@ -170,9 +170,8 @@ export default {
   },
   mounted () {
     var self = this
-    this.$root.$on('init_edit_series', function (id) {
-      alert(id)
-      self.seriesId = id
+    this.$root.$on('init_edit_series', function (el) {
+      self.seriesId = el.id
       self.id = 0
       self.published = false
       self.title = ''
@@ -181,7 +180,7 @@ export default {
       self.articles = []
       self.$refs.editSeries.show()
       self.$http.post(self.urls.getOneSeries,
-        'series_id=' + id,
+        'series_id=' + el.id,
         {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'

@@ -20,7 +20,7 @@ const updateSeries = `UPDATE db_schema.series
 	SET title = $2, description = $3, published = $4, count = $5 
 	WHERE id = $1 RETURNING id`
 
-const deleteSeries = `DELETE FROM db_schema.series 
+const deleteSeries = `DELETE FROM db_schema.series CASCADE
 	WHERE id = $1 AND author_id = $2 RETURNING id`
 
 var db *services.Pg

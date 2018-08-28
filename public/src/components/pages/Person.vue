@@ -34,7 +34,7 @@
   </div>
   <div class="col-lg-4">
     <search></search>
-    <series v-if="userLoaded" v-bind:author-id="id"></series>
+    <series v-if="userLoaded && isOwner" v-bind:author-id="id"></series>
     <tags></tags>
   </div>
 </div>

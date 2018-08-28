@@ -81,7 +81,8 @@ export default {
         try {
           r = JSON.parse(r.bodyText)
           if (r.status === 200) {
-            dataToSend.author_id = r.data
+            dataToSend.id = r.data
+            dataToSend.count = 0
             this.$root.$emit('created_series', dataToSend)
           } else {
             this.responseFailHandle(r)

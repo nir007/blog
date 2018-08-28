@@ -6,7 +6,7 @@
       </h5>
       <div v-if="series.length > 0">
         <b-list-group>
-          <b-list-group-item v-for="(item) in series" :key="item.id" class="flex-column align-items-start">
+          <b-list-group-item v-for="(item, index) in series" :key="item.id" class="flex-column align-items-start">
             <div v-bind:title="item.count + ' articles'">
               <div class="row">
                 <div class="col-md-8">
@@ -16,10 +16,10 @@
                   </p>
                 </div>
                 <div class="col-md-4 text-right">
-                  <p v-on:click="initEditSeries(item.id)" class="pointer text-info">
+                  <p v-on:click="initEditSeries(item.id, index)" class="pointer text-info">
                     <strong>Edit</strong>
                   </p>
-                  <p v-on:click="initRemoveSeries(item.id)" class="pointer text-danger">
+                  <p v-on:click="initRemoveSeries(item.id, index)" class="pointer text-danger">
                     <strong>Remove</strong>
                   </p>
                 </div>
@@ -69,15 +69,16 @@ export default {
     initCreateSeries: function () {
       this.$root.$emit('init_create_series')
     },
-    initEditSeries: function (id) {
-      this.$root.$emit('init_edit_series', id)
+    initEditSeries: function (id, index) {
+      this.$root.$emit('init_edit_series', {id: id, index: index})
     },
-    initRemoveSeries: function (removeSeriesId) {
-      this.removeSeriesId = removeSeriesId
+    initRemoveSeries: function (id, index) {
+      this.removeSeriesId = id
+      this.removeSeriesIndex = index
       this.$root.$emit('confirm', 'You want to delete this series! Are you sure ?')
     },
-    removeSeries: function (id) {
-      this.$http.post(this.urls.deleteSeries, 'id=' + id, {
+    removeSeries: function () {
+      this.$http.post(this.urls.deleteSeries, 'id=' + this.removeSeriesId, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
         }
@@ -115,7 +116,6 @@ export default {
       console.log(self.series)
       for (let i in self.series) {
         if (self.series[i].id === updates.id) {
-          alert('Кузмич нашел' + i)
           self.series[i].title = updates.title
           self.series[i].description = updates.description
           self.series[i].published = updates.published
@@ -124,10 +124,11 @@ export default {
       }
     })
     this.$root.$on('created_series', function (series) {
+      console.log(series)
       self.series.push(series)
     })
     this.$root.$on('ok', function () {
-      self.removeSeries(self.removeSeriesId)
+      self.removeSeries()
     })
   }
 }
