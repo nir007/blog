@@ -8,6 +8,13 @@ type Response struct {
 }
 
 func (r * Response) ToBytes() []byte {
-	result, _ := json.Marshal(r)
+	result, err := json.Marshal(r)
+
+	if err != nil {
+		r.Data = err
+		r.Status = 500
+		return r.ToBytes()
+	}
+
 	return []byte(result)
 }

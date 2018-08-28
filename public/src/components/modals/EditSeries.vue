@@ -1,10 +1,9 @@
 <template>
   <div>
     <b-modal size="lg"
-             @ok="create"
-             @shown="clearForm"
+             @ok="update"
              centered
-             ref="edit_series"
+             ref="editSeries"
              title="Edit series"
     >
       <div class="form-group">
@@ -95,12 +94,14 @@ export default {
   mixins: [ResponseHandler],
   data () {
     return {
+      seriesId: 0,
       articlesOfSeries: [],
       articles: [],
       isNotArticles: false,
       title: '',
       description: '',
       published: false,
+      count: 0,
       modalShow: false,
       limit: 10,
       warnings: [],
@@ -113,9 +114,6 @@ export default {
   },
   components: {
     'switches': Switches
-  },
-  props: {
-    seriesId: 'Number'
   },
   methods: {
     addArticleToSeries: function (index) {
@@ -138,27 +136,29 @@ export default {
         return
       }
 
-      let dataToSend = {
-        title: this.title,
-        description: this.description,
-        published: this.published ? 1 : 0
+      for (let i in this.articlesOfSeries) {
+        this.articlesOfSeries[i].text = ''
+        this.articlesOfSeries[i].tags = ''
       }
 
-      this.$http.post(this.url, dataToSend, {
+      let dataToSend = {
+        id: this.seriesId,
+        title: this.title,
+        description: this.description,
+        published: this.published ? 1 : 0,
+        articles: this.articlesOfSeries
+      }
+
+      this.$http.post(this.urls.update, dataToSend, {
         headers: {
           'Content-Type': 'application/json'
         }
       }).then(function (r) {
-        try {
-          r = JSON.parse(r.bodyText)
-          if (r.status === 200) {
-            dataToSend.author_id = r.data
-            this.$root.$emit('created_series', dataToSend)
-          } else {
-            this.responseFailHandle(r)
-          }
-        } catch (e) {
-          this.$root.$emit('warning', [e.message])
+        r = JSON.parse(r.bodyText)
+        if (r.status === 200) {
+          this.$root.$emit('series_updated', dataToSend)
+        } else {
+          this.responseFailHandle(r)
         }
       }, function (e) {
         this.responseFailHandle({status: 500, data: e, timeout: 10000})
@@ -166,39 +166,59 @@ export default {
     },
     hideModal: function () {
       this.$refs.create_series.hide()
-    },
-    clearForm: function () {
-      this.warnings = []
-      this.title = ''
-      this.description = ''
-      this.published = false
-      this.loadArticles = false
     }
   },
   mounted () {
     var self = this
-    this.$root.$on('init_edit_series', function () {
-      self.$refs.edit_series.show()
-    })
+    this.$root.$on('init_edit_series', function (id) {
+      alert(id)
+      self.seriesId = id
+      self.id = 0
+      self.published = false
+      self.title = ''
+      self.sescription = ''
+      self.articlesOfSeries = []
+      self.articles = []
+      self.$refs.editSeries.show()
+      self.$http.post(self.urls.getOneSeries,
+        'series_id=' + id,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+          }
+        }
+      ).then(function (r) {
+        r = JSON.parse(r.bodyText)
+        if (r.status === 200) {
+          self.id = r.data.id
+          self.title = r.data.title
+          self.description = r.data.description
+          self.published = r.data.published
+          self.count = r.data.count
+        } else {
+          self.responseFailHandle(r)
+        }
+      })
 
-    this.$http.post(this.urls.getArticles,
-      'limit=' + this.limit +
-      '&offset=' + this.articles.length,
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+      self.$http.post(self.urls.getArticles,
+        'limit=' + self.limit +
+        '&offset=' + self.articles.length,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+          }
         }
-      }
-    ).then(function (r) {
-      r = JSON.parse(r.bodyText)
-      if (r.status === 200) {
-        for (let i in r.data) {
-          this.articles.push(r.data[i])
+      ).then(function (r) {
+        r = JSON.parse(r.bodyText)
+        if (r.status === 200) {
+          for (let i in r.data) {
+            self.articles.push(r.data[i])
+          }
+          self.isNotArticles = self.articles.length === 0
+        } else {
+          self.responseFailHandle(r)
         }
-        this.isNotArticles = this.articles.length === 0
-      } else {
-        this.responseFailHandle(r)
-      }
+      })
     })
   }
 }

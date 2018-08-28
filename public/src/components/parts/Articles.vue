@@ -19,7 +19,7 @@
           </div>
           <div class="col-md-2 text-right">
             <a v-if="item.is_owner" :href="'#/edit/article/' + item.id">
-              edit
+              <strong class="text-info">Edit</strong>
             </a>
           </div>
         </div>

@@ -7,6 +7,7 @@ import BootstrapVue from 'bootstrap-vue'
 import Draggable from 'vuedraggable'
 import router from './router'
 import Notification from './components/parts/notifications/Notification.vue'
+import Confirm from './components/modals/Confim.vue'
 import Warning from './components/modals/Warning.vue'
 
 Vue.use(BootstrapVue)
@@ -14,18 +15,10 @@ Vue.use(BootstrapVue)
 Vue.config.productionTip = false
 
 Vue.component('nav-top', NavTop)
+Vue.component('confirm', Confirm)
 Vue.component('notification', Notification)
 Vue.component('draggable', Draggable)
 Vue.component('m-warning', Warning)
-
-Vue.mixin({
-  created: function () {
-    var myOption = this.$options.myOption
-    if (myOption) {
-      console.log(myOption)
-    }
-  }
-})
 
 Vue.extend()
 
@@ -34,5 +27,5 @@ new Vue({
   el: '#app',
   router,
   components: { App },
-  template: '<div><notification/><m-warning/><nav-top/><div class="container"><App/></div></div>'
+  template: '<div><confirm/><notification/><m-warning/><nav-top/><div class="container"><App/></div></div>'
 })

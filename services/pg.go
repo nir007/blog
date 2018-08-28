@@ -63,6 +63,7 @@ func (p *Pg) ExecuteSelect(query string, args ...interface{}) (rows *sql.Rows, e
 
 	stmt, err := db.Prepare(p.setSchema(query))
 
+
 	if err != nil {
 		return rows, err
 	}

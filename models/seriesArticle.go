@@ -10,8 +10,8 @@ const createRel = `INSERT INTO db_schema.series_article
 const updateOrders = `UPDATE db_schema.series_article
 	SET `
 
-const deleteRel = `DELETE FROM db_schema.series_article
-	(series_id, article_id, order) VALUES($1, $2, $3)`
+const deleteRel = `DELETE FROM db_schema.series_article CASCADE
+	WHERE id = $1`
 
 type SeriesArticle struct {
 	Id int        `json:"id"`
@@ -21,7 +21,7 @@ type SeriesArticle struct {
 }
 
 func (s * SeriesArticle) Create() (id int32, err error) {
-	pg := services.Pg{}
+	pg := new(services.Pg)
 	return pg.Execute(
 		createRel,
 		s.SeriesId,
@@ -31,11 +31,11 @@ func (s * SeriesArticle) Create() (id int32, err error) {
 }
 
 func (s *SeriesArticle) update()  {
-	pg := services.Pg{}
+	pg := new(services.Pg)
 	pg.Execute(updateOrders, s.ArticleId, s.Order)
 }
 
-func (s *SeriesArticle) Delete()  {
-	pg := services.Pg{}
-	pg.Execute(deleteRel, s.Id)
+func (s *SeriesArticle) Delete() (int32, error) {
+	pg := new(services.Pg)
+	return pg.Execute(deleteRel, s.Id)
 }

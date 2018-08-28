@@ -4,7 +4,7 @@
              @ok="create"
              @shown="clearForm"
              centered
-             ref="create_series"
+             ref="createSeries"
              title="New series"
     >
       <div class="form-group">
@@ -94,7 +94,7 @@ export default {
       })
     },
     hideModal: function () {
-      this.$refs.create_series.hide()
+      this.$refs.createSeries.hide()
     },
     clearForm: function () {
       this.warnings = []
@@ -106,8 +106,7 @@ export default {
   mounted () {
     var self = this
     this.$root.$on('init_create_series', function () {
-      console.log('1')
-      self.$refs.create_series.show()
+      self.$refs.createSeries.show()
     })
   }
 }

@@ -4,12 +4,11 @@ import (
 	"./models"
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"github.com/satori/go.uuid"
 	tpl "html/template"
 	"net/http"
 	"strconv"
 	"time"
-	"fmt"
-	"github.com/satori/go.uuid"
 )
 
 const cookieNameId = "uuid"
@@ -34,6 +33,10 @@ func main() {
 	router.HandleFunc("/aj_is_logged", isLoggedAction)
 
 	router.HandleFunc("/create_series", createSeriesAction)
+	router.HandleFunc("/get_one_series", getOneSeriesAction)
+	router.HandleFunc("/delete_series", deleteSeriesAction)
+	router.HandleFunc("/update_series", updateSeriesAction)
+
 	router.HandleFunc("/get_user_series", getUserSeries)
 	router.HandleFunc("/get_articles", getArticlesAction)
 	router.HandleFunc("/get_published_articles", getPublishedArticles)
@@ -61,16 +64,12 @@ func createSeriesAction(w http.ResponseWriter, r *http.Request) {
 	uid, err := r.Cookie(cookieNameId)
 
 	if err == nil {
-		if user, err := getLoggedUser(uid.Value);
-			err == nil && user.Id > 0 {
+		if user, err := getLoggedUser(uid.Value); err == nil && user.Id > 0 {
 
 			series := new(models.Series)
 			errDecode := json.NewDecoder(r.Body).Decode(&series)
 
-			fmt.Println(errDecode)
-
 			if errDecode != nil {
-				fmt.Println(errDecode)
 				response.Status = 500
 				response.Data = errDecode
 			} else {
@@ -90,7 +89,84 @@ func createSeriesAction(w http.ResponseWriter, r *http.Request) {
 	w.Write(response.ToBytes())
 }
 
-func getUserSeries(w http.ResponseWriter, r *http.Request)  {
+func getOneSeriesAction(w http.ResponseWriter, r *http.Request) {
+	response := models.Response{Status: 500, Data: "Some error"}
+
+	seriesId := r.FormValue("series_id")
+	sId, _ := strconv.ParseInt(seriesId, 10, 32)
+
+	series := new(models.Series)
+	err := series.One(sId)
+
+	if err != nil {
+		response.Status = 500
+		response.Data = err
+	} else if series.Id == 0 {
+		response.Status = 404
+		response.Data = "Series not found"
+	} else {
+		response.Status = 200
+		response.Data = series
+	}
+
+	w.Header().Set("Content-Type", contentTypeJson)
+	w.Write(response.ToBytes())
+}
+
+func deleteSeriesAction(w http.ResponseWriter, r *http.Request) {
+	response := models.Response{Status: 500, Data: "Some error"}
+	seriesId := r.FormValue("id")
+	sId, _ := strconv.ParseInt(seriesId, 10, 32)
+
+	uid, err := r.Cookie(cookieNameId)
+
+	if err == nil {
+		if user, err := getLoggedUser(uid.Value); err == nil && user.Id > 0 {
+			series := new(models.Series)
+			id, err := series.Delete(sId, int64(user.Id))
+
+			if err != nil {
+				response.Status = 500
+				response.Data = err
+			} else {
+				response.Status = 200
+				response.Data = id
+			}
+		}
+	}
+
+	w.Header().Set("Content-Type", contentTypeJson)
+	w.Write(response.ToBytes())
+}
+
+func updateSeriesAction(w http.ResponseWriter, r *http.Request)  {
+	response := models.Response{Status: 500, Data: "Some error"}
+	series := new(models.Series)
+
+	err := json.NewDecoder(r.Body).Decode(&series)
+
+	if err != nil {
+		response.Status = 500
+		response.Data = err
+	} else {
+		id, err := series.Update()
+		if err != nil {
+			response.Status = 500
+			response.Data = err
+		} else if id == 0 {
+			response.Status = 404
+			response.Data = "Series not found"
+		} else {
+			response.Status = 200
+			response.Data = id
+		}
+	}
+
+	w.Header().Set("Content-Type", contentTypeJson)
+	w.Write(response.ToBytes())
+}
+
+func getUserSeries(w http.ResponseWriter, r *http.Request) {
 	response := models.Response{Status: 500, Data: "some error"}
 	authorId := r.FormValue("author_id")
 
@@ -98,8 +174,6 @@ func getUserSeries(w http.ResponseWriter, r *http.Request)  {
 	series := new(models.Series)
 	series.AuthorId = int32(aId)
 	rows, err := series.Read()
-
-	fmt.Println(rows, err)
 
 	if err != nil {
 		response.Status = 500
@@ -181,7 +255,7 @@ func getArticleAction(w http.ResponseWriter, r *http.Request) {
 	user := models.User{}
 	response := models.Response{
 		Status: 404,
-		Data: "Article not found",
+		Data:   "Article not found",
 	}
 
 	id := r.FormValue("id")
@@ -261,16 +335,12 @@ func updateArticleAction(w http.ResponseWriter, r *http.Request) {
 
 	uid, err := r.Cookie(cookieNameId)
 
-	fmt.Println(uid)
-
 	if uid != nil && err == nil {
 		err := json.NewDecoder(r.Body).Decode(&article)
 		if err != nil {
 			response.Status = 500
 			response.Data = err.Error()
-		} else if user, err := getLoggedUser(uid.Value);
-			err == nil && user.Id == article.AuthorId {
-
+		} else if user, err := getLoggedUser(uid.Value); err == nil && user.Id == article.AuthorId {
 			_, err := article.Update()
 			if err != nil {
 				response.Status = 500

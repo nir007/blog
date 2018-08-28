@@ -16,10 +16,10 @@
                   </p>
                 </div>
                 <div class="col-md-4 text-right">
-                  <p v-on:click="initEditSeries" class="pointer text-info">
+                  <p v-on:click="initEditSeries(item.id)" class="pointer text-info">
                     <strong>Edit</strong>
                   </p>
-                  <p v-on:click="initRemoveSeries" class="pointer text-danger">
+                  <p v-on:click="initRemoveSeries(item.id)" class="pointer text-danger">
                     <strong>Remove</strong>
                   </p>
                 </div>
@@ -42,8 +42,10 @@
 <script>
 import EditSeries from '../modals/EditSeries.vue'
 import CreateSeries from '../modals/CreateSeries.vue'
+import ResponseHandler from '../mixins/ResponseHandler.vue'
 export default {
   name: 'Series',
+  mixins: [ResponseHandler],
   components: {
     EditSeries,
     CreateSeries
@@ -51,7 +53,13 @@ export default {
   data () {
     return {
       series: [],
-      url: '/get_user_series'
+      editSeriesId: 0,
+      removeSeriesId: 0,
+      removeSeriesIndex: 0,
+      urls: {
+        getUserSeries: '/get_user_series',
+        deleteSeries: '/delete_series'
+      }
     }
   },
   props: {
@@ -61,20 +69,34 @@ export default {
     initCreateSeries: function () {
       this.$root.$emit('init_create_series')
     },
-    initEditSeries: function () {
-      this.$root.$emit('init_edit_series')
+    initEditSeries: function (id) {
+      this.$root.$emit('init_edit_series', id)
     },
-    initRemoveSeries: function () {
-      alert('remove')
+    initRemoveSeries: function (removeSeriesId) {
+      this.removeSeriesId = removeSeriesId
+      this.$root.$emit('confirm', 'You want to delete this series! Are you sure ?')
     },
-    getSeries: function () {
-      this.$http.post(this.url, 'author_id=' + this.authorId, {
+    removeSeries: function (id) {
+      this.$http.post(this.urls.deleteSeries, 'id=' + id, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
         }
       }).then(function (r) {
         r = JSON.parse(r.bodyText)
-        console.log(r)
+        if (r.status === 200 && r.data > 0) {
+          this.series.splice(this.removeSeriesIndex, 1)
+        } else {
+          this.responseFailHandle(r)
+        }
+      })
+    },
+    getSeries: function () {
+      this.$http.post(this.urls.getUserSeries, 'author_id=' + this.authorId, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        }
+      }).then(function (r) {
+        r = JSON.parse(r.bodyText)
         if (r.status === 200) {
           for (let i in r.data) {
             this.series.push(r.data[i])
@@ -88,8 +110,24 @@ export default {
   mounted () {
     this.getSeries()
     let self = this
+    this.$root.$on('series_updated', function (updates) {
+      console.log(updates)
+      console.log(self.series)
+      for (let i in self.series) {
+        if (self.series[i].id === updates.id) {
+          alert('Кузмич нашел' + i)
+          self.series[i].title = updates.title
+          self.series[i].description = updates.description
+          self.series[i].published = updates.published
+          self.series[i].count = updates.count
+        }
+      }
+    })
     this.$root.$on('created_series', function (series) {
       self.series.push(series)
+    })
+    this.$root.$on('ok', function () {
+      self.removeSeries(self.removeSeriesId)
     })
   }
 }
