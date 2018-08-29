@@ -36,7 +36,7 @@ func init() {
 type Pg struct {}
 
 func (p *Pg) setSchema(queryBefore string) (queryAfter string) {
-	return strings.Replace(queryBefore, "db_schema", schema, 1)
+	return strings.Replace(queryBefore, "db_schema", schema, -1)
 }
 
 func (p *Pg) Execute(query string, args ...interface{}) (id int32, err error) {

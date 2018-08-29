@@ -11,7 +11,7 @@ const create = `INSERT INTO db_schema.series
 
 const read = `SELECT id, author_id, count, title, description, published
 	FROM db_schema.series 
-	WHERE author_id = $1 ORDER BY published DESC`
+	WHERE author_id = $1 ORDER BY published DESC LIMIT $2 OFFSET $3`
 
 const one = `SELECT id, author_id, title, description, published, count
 	FROM db_schema.series WHERE id = $1 LIMIT 1`
@@ -30,13 +30,13 @@ func init() {
 }
 
 type Series struct {
-		Id int32       		`json:"id"`
+	Id int32       			`json:"id"`
 	AuthorId int32     		`json:"author_id"`
 	Count int64        		`json:"count"`
 	Title string       		`json:"title"`
 	Description string 		`json:"description"`
 	Published rune     		`json:"published"`
-	Articles []interface{}	`json:"articles"`
+	Articles []Article		`json:"articles"`
 }
 
 func (s * Series) Create() (id int32, err error) {
@@ -49,8 +49,8 @@ func (s * Series) Create() (id int32, err error) {
 	)
 }
 
-func (s *Series) Read() (result []Series, err error) {
-	rows, err := db.ExecuteSelect(read, s.AuthorId)
+func (s *Series) Read(limit, offset int64) (result []Series, err error) {
+	rows, err := db.ExecuteSelect(read, s.AuthorId, limit, offset)
 
 	if err != nil {
 		return nil, err
@@ -117,6 +117,8 @@ func (s *Series) One(id int64) (err error) {
 			)
 			break
 		}
+
+		rows, err := db.ExecuteSelect(one, id)
 	}
 
 	return err

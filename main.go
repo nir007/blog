@@ -149,16 +149,20 @@ func updateSeriesAction(w http.ResponseWriter, r *http.Request)  {
 		response.Status = 500
 		response.Data = err
 	} else {
-		id, err := series.Update()
+		seriesId, err := series.Update()
 		if err != nil {
 			response.Status = 500
 			response.Data = err
-		} else if id == 0 {
+		} else if seriesId == 0 {
 			response.Status = 404
 			response.Data = "Series not found"
 		} else {
-			response.Status = 200
-			response.Data = id
+			seriesArticles := new(models.SeriesArticle)
+			err := seriesArticles.Rebuild(series.Id, series.Articles)
+			if err == nil {
+				response.Status = 200
+				response.Data = seriesId
+			}
 		}
 	}
 
@@ -169,11 +173,15 @@ func updateSeriesAction(w http.ResponseWriter, r *http.Request)  {
 func getUserSeries(w http.ResponseWriter, r *http.Request) {
 	response := models.Response{Status: 500, Data: "some error"}
 	authorId := r.FormValue("author_id")
+	limit := r.FormValue("limit")
+	offset := r.FormValue("offset")
 
 	aId, _ := strconv.ParseInt(authorId, 10, 32)
-	series := new(models.Series)
-	series.AuthorId = int32(aId)
-	rows, err := series.Read()
+	perPage, _ := strconv.ParseInt(limit, 10, 32)
+	skip, _ := strconv.ParseInt(offset, 10, 32)
+
+	series := models.Series {AuthorId: int32(aId)}
+	rows, err := series.Read(perPage, skip)
 
 	if err != nil {
 		response.Status = 500

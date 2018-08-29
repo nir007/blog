@@ -14,7 +14,9 @@ const insertArticle = `INSERT INTO db_schema.article(author_id, title, text, tag
 	VALUES($1, $2, $3, $4, NOW(), $5) RETURNING id`
 
 const selectArticles = `SELECT id, author_id, title, text, tags, created_at, published 
-	FROM db_schema.article WHERE published = 1::bit ORDER BY created_at DESC LIMIT $1 OFFSET $2`
+	FROM db_schema.article WHERE published = 1::bit 
+	AND NOT EXISTS (SELECT id FROM db_schema.series_article WHERE article_id = db_schema.article.id)
+	ORDER BY created_at DESC LIMIT $1 OFFSET $2`
 
 const selectArticlesByTag = `SELECT id, author_id, title, text, tags, created_at, published 
 	FROM db_schema.article WHERE tags?$1 AND published = 1::bit ORDER BY created_at DESC LIMIT $2 OFFSET $3`
@@ -30,6 +32,7 @@ const selectForAuthor = `SELECT id, author_id, title, text, tags, created_at, pu
 
 const selectPublishedForAuthor = `SELECT id, author_id, title, text, tags, created_at
 	FROM db_schema.article WHERE author_id = $1 AND published = 1::bit
+	AND NOT EXISTS (SELECT id FROM db_schema.series_article WHERE article_id = db_schema.article.id)
 	ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 
 const updateArticle = `UPDATE db_schema.article SET title = $1, text = $2, tags = $3, published = $4
@@ -43,7 +46,8 @@ type Article struct {
 	CreatedAt time.Time 		`json:"created"`
 	Tags      map[string]string	`json:"tags"`
 	Published rune				`json:"published"`
-	IsOwner bool                `json:"is_owner"`
+	IsOwner   bool				`json:"is_owner"`
+	Order 	  int32				`json:"order,string,omitempty"`
 }
 
 func (a *Article) Add() {

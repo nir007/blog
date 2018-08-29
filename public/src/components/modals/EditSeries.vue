@@ -108,7 +108,7 @@ export default {
       urls: {
         update: '/update_series',
         getOneSeries: '/get_one_series',
-        getArticles: '/get_published_articles'
+        getPublishedArticles: '/get_published_articles'
       }
     }
   },
@@ -138,7 +138,8 @@ export default {
 
       for (let i in this.articlesOfSeries) {
         this.articlesOfSeries[i].text = ''
-        this.articlesOfSeries[i].tags = ''
+        this.articlesOfSeries[i].tags = {}
+        this.articlesOfSeries[i].order = i
       }
 
       let dataToSend = {
@@ -148,6 +149,8 @@ export default {
         published: this.published ? 1 : 0,
         articles: this.articlesOfSeries
       }
+
+      console.log(dataToSend)
 
       this.$http.post(this.urls.update, dataToSend, {
         headers: {
@@ -199,7 +202,7 @@ export default {
         }
       })
 
-      self.$http.post(self.urls.getArticles,
+      self.$http.post(self.urls.getPublishedArticles,
         'limit=' + self.limit +
         '&offset=' + self.articles.length,
         {
