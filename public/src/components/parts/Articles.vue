@@ -6,7 +6,7 @@
           <div class="col-md-10">
             <h2 class="post__title">
               <a :href="'#/a/' + item.id" class="post__title_link">
-                <strong>{{ item.title }}</strong>
+                {{ item.title }}
               </a>
             </h2>
             <small>

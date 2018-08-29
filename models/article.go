@@ -15,7 +15,9 @@ const insertArticle = `INSERT INTO db_schema.article(author_id, title, text, tag
 
 const selectArticles = `SELECT id, author_id, title, text, tags, created_at, published 
 	FROM db_schema.article WHERE published = 1::bit 
-	AND NOT EXISTS (SELECT id FROM db_schema.series_article WHERE article_id = db_schema.article.id)
+	AND NOT EXISTS (SELECT id FROM db_schema.series_article AS rel
+		WHERE article_id = db_schema.article.id AND rel.order_num <> 0
+	)
 	ORDER BY created_at DESC LIMIT $1 OFFSET $2`
 
 const selectArticlesByTag = `SELECT id, author_id, title, text, tags, created_at, published 

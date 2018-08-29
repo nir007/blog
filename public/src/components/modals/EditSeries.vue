@@ -76,9 +76,9 @@
             </b-list-group-item>
           </b-list-group>
         </div>
-        <div v-if="isNotArticles" class="form-control text-center">
+        <div v-if="isNotArticles" class="form-group text-center">
           <h3 class="text-center">
-            <a href="#/new_article">Crate the first article</a>
+            <a href="#/new_article">+ Crate an article</a>
           </h3>
         </div>
       </div>
@@ -121,6 +121,7 @@ export default {
       this.articles.splice(index, 1)
     },
     removeArticleFromSeries: function (index) {
+      this.isNotArticles = false
       this.articles.push(this.articlesOfSeries[index])
       this.articlesOfSeries.splice(index, 1)
     },
@@ -178,10 +179,11 @@ export default {
       self.id = 0
       self.published = false
       self.title = ''
-      self.sescription = ''
+      self.description = ''
       self.articlesOfSeries = []
       self.articles = []
       self.$refs.editSeries.show()
+
       self.$http.post(self.urls.getOneSeries,
         'series_id=' + el.id,
         {
@@ -197,6 +199,9 @@ export default {
           self.description = r.data.description
           self.published = r.data.published
           self.count = r.data.count
+          if (r.data.articles != null && r.data.articles.length > 0) {
+            self.articlesOfSeries = r.data.articles
+          }
         } else {
           self.responseFailHandle(r)
         }

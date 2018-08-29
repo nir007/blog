@@ -23,6 +23,12 @@ const updateSeries = `UPDATE db_schema.series
 const deleteSeries = `DELETE FROM db_schema.series CASCADE
 	WHERE id = $1 AND author_id = $2 RETURNING id`
 
+const articles = `SELECT a.id, a.author_id, a.title, a.text, a.created_at, a.published, rel.order_num 
+	FROM db_schema.series_article AS rel
+	LEFT JOIN db_schema.article AS a ON rel.article_id = a.id 
+	WHERE series_id = $1
+	ORDER BY rel.order_num`
+
 var db *services.Pg
 
 func init() {
@@ -118,7 +124,25 @@ func (s *Series) One(id int64) (err error) {
 			break
 		}
 
-		rows, err := db.ExecuteSelect(one, id)
+		if s.Id > 0 {
+			rows, err = db.ExecuteSelect(articles, s.Id)
+
+			if err == nil {
+				for rows.Next() {
+					article := Article{}
+					rows.Scan(
+						&article.Id,
+						&article.AuthorId,
+						&article.Title,
+						&article.Text,
+						&article.CreatedAt,
+						&article.Published,
+						&article.Order,
+					)
+					s.Articles = append(s.Articles, article)
+				}
+			}
+		}
 	}
 
 	return err
