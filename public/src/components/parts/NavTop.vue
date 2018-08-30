@@ -3,24 +3,20 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
       <div class="container">
         <a class="navbar-brand" href="#/">{{logo}}</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button"
+                data-toggle="collapse"
+                data-target="#navbarResponsive"
+                aria-controls="navbarResponsive"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+        >
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
-            <li class="nav-item active">
-              <a class="nav-link " href="#/articles">
-                articles
-              </a>
-            </li>
-            <li v-if="isLogged" class="nav-item">
-              <a class="nav-link" href="#/new_article">
-                new article
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#/persons">
-                persons
+            <li v-for="item in centralItems" :key="item.id" v-bind:class="{active: item.active}" class="nav-item">
+              <a class="nav-link" :href="item.path">
+                {{item.title}}
               </a>
             </li>
           </ul>
@@ -56,6 +52,23 @@ export default {
   name: 'NavTop',
   data () {
     return {
+      centralItems: {
+        articles: {
+          title: 'articles',
+          path: '#/articles',
+          active: false
+        },
+        newArticle: {
+          title: 'new article',
+          path: '#/new_article',
+          active: true
+        },
+        persons: {
+          title: 'persons',
+          path: '#/persons',
+          active: false
+        }
+      },
       personId: 0,
       logo: 'rakan-tarakan.com',
       isLogged: false
@@ -74,6 +87,12 @@ export default {
     }
   },
   mounted () {
+    console.log(this.$router.currentRoute.fullPath)
+
+    for (let i in this.centralItems) {
+      if (this.centralItems[i]) { }
+    }
+
     var self = this
     this.$root.$on('check_is_logged', function (user) {
       if (user && 'id' in user && user.id > 0) {

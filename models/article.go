@@ -10,46 +10,74 @@ import (
 	"regexp"
 )
 
-const insertArticle = `INSERT INTO db_schema.article(author_id, title, text, tags, created_at, published)
+const insertArticle = `INSERT INTO db_schema.article
+	(author_id, title, text, tags, created_at, published)
 	VALUES($1, $2, $3, $4, NOW(), $5) RETURNING id`
 
 const selectArticles = `SELECT id, author_id, title, text, tags, created_at, published 
 	FROM db_schema.article WHERE published = 1::bit 
-	AND NOT EXISTS (SELECT id FROM db_schema.series_article AS rel
+	AND NOT EXISTS (SELECT article_id FROM db_schema.series_article AS rel
 		WHERE article_id = db_schema.article.id AND rel.order_num <> 0
 	)
 	ORDER BY created_at DESC LIMIT $1 OFFSET $2`
 
 const selectArticlesByTag = `SELECT id, author_id, title, text, tags, created_at, published 
-	FROM db_schema.article WHERE tags?$1 AND published = 1::bit ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	FROM db_schema.article WHERE tags?$1 AND published = 1::bit 
+	ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 
-const selectArticle = `SELECT id, author_id, title, text, tags, created_at, published 
-	FROM db_schema.article WHERE id = $1`
+const selectArticle = `SELECT a.id, a.author_id, a.title, a.text, 
+	rel.series_id AS series_id, a.tags, a.created_at, a.published,
+	(	
+		SELECT jsonb_agg((innerRel.article_id::varchar(8), a_next.title)) AS next_article 
+		FROM db_schema.article AS a_next
+		LEFT JOIN db_schema.series_article AS innerRel ON innerRel.series_id = rel.series_id 
+		WHERE (rel.order_num + 1) = innerRel.order_num AND a_next.id = innerRel.article_id
+		GROUP BY innerRel.article_id, a_next.title LIMIT 1
+	) AS next_article,
+	(	
+		SELECT jsonb_agg((innerRel.article_id::varchar(8), a_prev.title)) AS prev_article 
+		FROM db_schema.article AS a_prev
+		LEFT JOIN db_schema.series_article AS innerRel ON innerRel.series_id = rel.series_id 
+		WHERE (rel.order_num - 1) = innerRel.order_num AND a_prev.id = innerRel.article_id
+		GROUP BY innerRel.article_id, a_prev.title LIMIT 1
+	) AS prev_article
+	FROM db_schema.article AS a
+	LEFT JOIN db_schema.series_article AS rel ON rel.article_id = a.id
+	WHERE a.id = $1`
 
 const selectTags = `SELECT DISTINCT tags 
 	FROM db_schema.article WHERE published = 1::bit`
 
 const selectForAuthor = `SELECT id, author_id, title, text, tags, created_at, published 
-	FROM db_schema.article WHERE author_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	FROM db_schema.article WHERE author_id = $1 
+	ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 
 const selectPublishedForAuthor = `SELECT id, author_id, title, text, tags, created_at
 	FROM db_schema.article WHERE author_id = $1 AND published = 1::bit
-	AND NOT EXISTS (SELECT id FROM db_schema.series_article WHERE article_id = db_schema.article.id)
+	AND NOT EXISTS 
+	(
+		SELECT id FROM db_schema.series_article 
+		WHERE article_id = db_schema.article.id
+	)
 	ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 
-const updateArticle = `UPDATE db_schema.article SET title = $1, text = $2, tags = $3, published = $4
+const updateArticle = `UPDATE db_schema.article SET title = $1,
+	text = $2, tags = $3, published = $4
 	WHERE id = $5 AND author_id = $6 RETURNING id`
 
 type Article struct {
-	Id        int32     		`json:"id,string,omitempty"`
-	AuthorId  int32     		`json:"author_id,string,omitempty"`
-	Title     string    		`json:"title"`
-	Text      string			`json:"text"`
-	CreatedAt time.Time 		`json:"created"`
-	Tags      map[string]string	`json:"tags"`
-	Published rune				`json:"published"`
-	IsOwner   bool				`json:"is_owner"`
-	Order 	  int32				`json:"order,string,omitempty"`
+	Id			int32				`json:"id,string,omitempty"`
+	SeriesId	int32				`json:"series_id,string,omitempty"`
+	AuthorId	int32				`json:"author_id,string,omitempty"`
+	Title		string				`json:"title"`
+	Text		string				`json:"text"`
+	CreatedAt	time.Time 			`json:"created"`
+	Tags		map[string]string	`json:"tags"`
+	Published	rune				`json:"published"`
+	IsOwner		bool				`json:"is_owner"`
+	Order		int32				`json:"order,string,omitempty"`
+	PrevArticle	map[string]string	`json:"prev_article"`
+	NextArticle	map[string]string	`json:"next_article"`
 }
 
 func (a *Article) Add() {
@@ -225,26 +253,53 @@ func (a *Article) Get(authorId, perPage, skip int64, tag string) (result []Artic
 func (a *Article) One(id int64) (err error) {
 	pg := services.Pg{}
 	var rows *sql.Rows
+	var nullSeriesId sql.NullInt64
 	var nullTags sql.NullString
+	var nullPrevArticle sql.NullString
+	var nullNextArticle sql.NullString
 
 	rows, err = pg.ExecuteSelect(selectArticle, id)
 
-	for rows.Next() {
-		rows.Scan(
-			&a.Id,
-			&a.AuthorId,
-			&a.Title,
-			&a.Text,
-			&nullTags,
-			&a.CreatedAt,
-			&a.Published,
-		)
+	if err == nil {
+		for rows.Next() {
+			rows.Scan(
+				&a.Id,
+				&a.AuthorId,
+				&a.Title,
+				&a.Text,
+				&nullSeriesId,
+				&nullTags,
+				&a.CreatedAt,
+				&a.Published,
+				&nullNextArticle,
+				&nullPrevArticle,
+			)
 
-		tagsMap := map[string]string {}
+			if nullSeriesId.Valid {
+				a.SeriesId = int32(nullSeriesId.Int64)
+			}
 
-		if nullTags.Valid {
-			json.Unmarshal([]byte(nullTags.String), &tagsMap)
-			a.Tags = tagsMap
+			reg := regexp.MustCompile(`[\[|\]]`)
+
+			if nullPrevArticle.Valid {
+				prevArticleMap := map[string]string {}
+				nullPrevArticle.String = string(reg.ReplaceAllString(nullPrevArticle.String, ""))
+				json.Unmarshal([]byte(nullPrevArticle.String), &prevArticleMap)
+				a.PrevArticle = prevArticleMap
+			}
+
+			if nullNextArticle.Valid {
+				nextArticleMap := map[string]string {}
+				nullNextArticle.String = reg.ReplaceAllString(nullNextArticle.String, "")
+				json.Unmarshal([]byte(nullNextArticle.String), &nextArticleMap)
+				a.NextArticle = nextArticleMap
+			}
+
+			if nullTags.Valid {
+				tagsMap := map[string]string {}
+				json.Unmarshal([]byte(nullTags.String), &tagsMap)
+				a.Tags = tagsMap
+			}
 		}
 	}
 

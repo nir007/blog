@@ -36,11 +36,22 @@
       <div v-if="!article.published" class="text-center">
         <br>
         <h1 class="text-center">This article is not published yet</h1>
-        <h1 class="text-center">Work is in progress</h1>
       </div>
       <div v-if="notFound" class="text-center">
         <h1 class="text-center">Article not found</h1>
         <img src="/static/assets/img/404-error.jpg" alt="404 not found" >
+      </div>
+      <div class="row margin-top50px margin-bottom20px">
+        <div class="col-md-6 text-left">
+          <b-button size="lg" v-if="prev" :href="'#/a/' + prev.f1" variant="outline-success">
+            {{prev.f2}}
+          </b-button>
+        </div>
+        <div class="col-md-6 text-right">
+          <b-button size="lg" v-if="next" :href="'#/a/' + next.f1" variant="outline-success">
+            {{next.f2}}
+          </b-button>
+        </div>
       </div>
     </div>
   </div>
@@ -56,6 +67,8 @@ export default {
   mixins: [ResponseHandler, AuthHandler],
   data () {
     return {
+      next: false,
+      prev: false,
       article: {
         id: 0,
         title: '',
@@ -92,6 +105,25 @@ export default {
       .then(function (r) {
         r = JSON.parse(r.bodyText)
         if (r.status === 200) {
+          if (
+            'next_article' in r.data.article &&
+            'prev_article' in r.data.article
+          ) {
+            if (r.data.article.next_article != null &&
+              typeof r.data.article.next_article === 'object' &&
+              'f1' in r.data.article.next_article
+            ) {
+              this.next = r.data.article.next_article
+            }
+
+            if (r.data.article.prev_article != null &&
+              typeof r.data.article.prev_article === 'object' &&
+              'f1' in r.data.article.prev_article
+            ) {
+              this.prev = r.data.article.prev_article
+            }
+          }
+
           this.article.id = r.data.article.id
           this.article.title = r.data.article.title
           this.article.text = r.data.article.text
