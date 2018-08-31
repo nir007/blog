@@ -9,11 +9,15 @@
       <div class="form-group">
         <div class="form-group">
           <label>Title</label>
-          <input typeof="text" class="form-control" v-model="title"/>
+          <input typeof="text"
+                 class="form-control"
+                 v-model="title"/>
         </div>
         <div class="form-group">
           <label>Description</label>
-          <input typeof="text" class="form-control" v-model="description"/>
+          <input typeof="text"
+                 class="form-control"
+                 v-model="description"/>
         </div>
         <div class="form-group">
           <div class="row">
@@ -31,7 +35,11 @@
         </div>
         <div class="form-group">
           <h4 class="text-center">Articles of this series: </h4>
-          <draggable v-model="articlesOfSeries" :options="{group:'title'}" @start="drag=true" @end="drag=false">
+          <draggable v-model="articlesOfSeries"
+                     :options="{group:'title'}"
+                     @start="drag=true"
+                     @end="drag=false"
+          >
             <b-list-group v-for="(item, index) in articlesOfSeries" :key="item.id">
               <b-list-group-item>
                 <div class="row">
@@ -44,7 +52,8 @@
                     {{item.title}}
                   </div>
                   <div class="col-md-2 text-right">
-                    <strong v-on:click="removeArticleFromSeries(index)" class="pointer text-danger">
+                    <strong v-on:click="removeArticleFromSeries(index)"
+                            class="pointer text-danger">
                       Remove
                     </strong>
                   </div>
@@ -68,7 +77,8 @@
                   {{item.title}}
                 </div>
                 <div class="col-md-2 text-right">
-                  <strong v-on:click="addArticleToSeries(index)" class="pointer text-success">
+                  <strong v-on:click="addArticleToSeries(index)"
+                          class="pointer text-success">
                     Add
                   </strong>
                 </div>
@@ -94,6 +104,7 @@ export default {
   mixins: [ResponseHandler],
   data () {
     return {
+      updatedCount: 0,
       seriesId: 0,
       articlesOfSeries: [],
       articles: [],
@@ -115,6 +126,9 @@ export default {
   components: {
     'switches': Switches
   },
+  updated () {
+    ++this.updatedCount
+  },
   methods: {
     addArticleToSeries: function (index) {
       this.articlesOfSeries.push(this.articles[index])
@@ -126,47 +140,47 @@ export default {
       this.articlesOfSeries.splice(index, 1)
     },
     update: function () {
-      if (!this.title) {
-        this.warnings.push('enter title')
-      }
-      if (!this.description) {
-        this.warnings.push('enter description')
-      }
-      if (this.warnings.length > 0) {
-        this.$root.$emit('warning', this.warnings)
-        return
-      }
-
-      for (let i in this.articlesOfSeries) {
-        this.articlesOfSeries[i].text = ''
-        this.articlesOfSeries[i].tags = {}
-        this.articlesOfSeries[i].order = i
-      }
-
-      let dataToSend = {
-        id: this.seriesId,
-        title: this.title,
-        description: this.description,
-        published: this.published ? 1 : 0,
-        articles: this.articlesOfSeries
-      }
-
-      console.log(dataToSend)
-
-      this.$http.post(this.urls.update, dataToSend, {
-        headers: {
-          'Content-Type': 'application/json'
+      if (this.updatedCount > 3) {
+        if (!this.title) {
+          this.warnings.push('enter title')
         }
-      }).then(function (r) {
-        r = JSON.parse(r.bodyText)
-        if (r.status === 200) {
-          this.$root.$emit('series_updated', dataToSend)
-        } else {
-          this.responseFailHandle(r)
+        if (!this.description) {
+          this.warnings.push('enter description')
         }
-      }, function (e) {
-        this.responseFailHandle({status: 500, data: e, timeout: 10000})
-      })
+        if (this.warnings.length > 0) {
+          this.$root.$emit('warning', this.warnings)
+          return
+        }
+
+        for (let i in this.articlesOfSeries) {
+          this.articlesOfSeries[i].text = ''
+          this.articlesOfSeries[i].tags = {}
+          this.articlesOfSeries[i].order = i
+        }
+
+        let dataToSend = {
+          id: this.seriesId,
+          title: this.title,
+          description: this.description,
+          published: this.published ? 1 : 0,
+          articles: this.articlesOfSeries
+        }
+
+        this.$http.post(this.urls.update, dataToSend, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }).then(function (r) {
+          r = JSON.parse(r.bodyText)
+          if (r.status === 200) {
+            this.$root.$emit('series_updated', dataToSend)
+          } else {
+            this.responseFailHandle(r)
+          }
+        }, function (e) {
+          this.responseFailHandle({status: 500, data: e, timeout: 10000})
+        })
+      }
     },
     hideModal: function () {
       this.$refs.create_series.hide()
@@ -175,6 +189,7 @@ export default {
   mounted () {
     var self = this
     this.$root.$on('init_edit_series', function (el) {
+      self.updatedCount = 0
       self.seriesId = el.id
       self.id = 0
       self.published = false

@@ -14,26 +14,36 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
-            <li v-for="item in centralItems" :key="item.id" v-bind:class="{active: item.active}" class="nav-item">
+            <li v-for="item in menu.center" :key="item.id"
+                v-if="!item.reqAuth || isLogged"
+                v-bind:class="{active: item.active}"
+                class="nav-item"
+            >
               <a class="nav-link" :href="item.path">
                 {{item.title}}
               </a>
             </li>
           </ul>
           <ul class="navbar-nav ml-auto">
-            <li v-if="isLogged" class="nav-item">
-              <a class="nav-link" :href="'#/person/' + personId">
-                profile
+            <li v-for="item in menu.right"
+                :key="item.id"
+                v-bind:class="{active: item.active}"
+                v-if="((isLogged && item.reqAuth) ||
+                 (!isLogged && item.reqNotAuth))"
+                class="nav-item"
+            >
+              <a v-if="item.path"
+                 class="nav-link"
+                 :href="item.path + '/' + personId"
+              >
+                {{item.title}}
               </a>
-            </li>
-            <li v-if="!isLogged" class="nav-item">
-              <a class="nav-link" href="javascript:void(0)" @click="join">
-                [ join now! ]
-              </a>
-            </li>
-            <li v-if="!isLogged" class="nav-item">
-              <a class="nav-link" href="javascript:void(0)" @click="singIn">
-                [ sign in ]
+              <a v-if="(!item.path)"
+                 class="nav-link"
+                 href="javascript:void(0)"
+                 @click="item.click"
+              >
+                {{item.title}}
               </a>
             </li>
           </ul>
@@ -52,21 +62,52 @@ export default {
   name: 'NavTop',
   data () {
     return {
-      centralItems: {
-        articles: {
-          title: 'articles',
-          path: '#/articles',
-          active: false
+      menu: {
+        center: {
+          articles: {
+            title: 'articles',
+            path: '#/articles',
+            active: false,
+            reqAuth: false
+          },
+          newArticle: {
+            title: 'new article',
+            path: '#/new_article',
+            active: true,
+            reqAuth: true
+          },
+          persons: {
+            title: 'persons',
+            path: '#/persons',
+            active: false,
+            reqAuth: false
+          }
         },
-        newArticle: {
-          title: 'new article',
-          path: '#/new_article',
-          active: true
-        },
-        persons: {
-          title: 'persons',
-          path: '#/persons',
-          active: false
+        right: {
+          person: {
+            title: 'person',
+            path: '#/person',
+            click: false,
+            active: false,
+            reqAuth: true,
+            reqNotAuth: false
+          },
+          join: {
+            title: '[ join now! ]',
+            path: false,
+            click: this.join,
+            active: false,
+            reqAuth: false,
+            reqNotAuth: true
+          },
+          signIn: {
+            title: '[ sign in ]',
+            path: false,
+            click: this.singIn,
+            active: false,
+            reqAuth: false,
+            reqNotAuth: true
+          }
         }
       },
       personId: 0,
@@ -84,17 +125,20 @@ export default {
     },
     join: function () {
       this.$root.$emit('join', {})
+    },
+    lightItem () {
+      let name = this.$router.currentRoute.name
+      for (let i in this.menu) {
+        for (let j in this.menu[i]) {
+          this.menu[i][j].active = j === name
+        }
+      }
     }
   },
   mounted () {
-    console.log(this.$router.currentRoute.fullPath)
-
-    for (let i in this.centralItems) {
-      if (this.centralItems[i]) { }
-    }
-
     var self = this
     this.$root.$on('check_is_logged', function (user) {
+      self.lightItem()
       if (user && 'id' in user && user.id > 0) {
         self.isLogged = true
         self.personId = user.id

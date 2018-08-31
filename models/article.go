@@ -12,7 +12,7 @@ import (
 
 const insertArticle = `INSERT INTO db_schema.article
 	(author_id, title, text, tags, created_at, published)
-	VALUES($1, $2, $3, $4, NOW(), $5) RETURNING id`
+	VALUES($1, $2, $3, $4, $5, $6) RETURNING id`
 
 const selectArticles = `SELECT id, author_id, title, text, tags, created_at, published 
 	FROM db_schema.article WHERE published = 1::bit 
@@ -98,12 +98,15 @@ func (a *Article) Add() {
 		tagsJson = nil
 	}
 
+	createdAt := time.Now()
+
 	a.Id, err = pg.Execute(
 		insertArticle,
 		a.AuthorId,
 		a.Title,
 		a.Text,
 		tagsJson,
+		createdAt,
 		a.Published,
 	)
 }

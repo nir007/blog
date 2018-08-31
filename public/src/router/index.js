@@ -18,48 +18,48 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'Index',
+      name: 'index',
       component: Articles
     },
     {
       path: '/articles/:tag?',
-      name: 'Articles',
+      name: 'articles',
       component: Articles
     },
     {
       path: '/a/:id',
-      name: 'Article',
+      name: 'article',
       component: Article
     },
     {
       path: '/new_article',
-      name: 'NewArticle',
+      name: 'newArticle',
       component: NewArticle
     },
     {
       path: '/edit/article/:id',
-      name: 'EditArticle',
+      name: 'editArticle',
       component: EditArticle
     },
     {
       path: '/person/:id?',
-      name: 'Person',
+      name: 'person',
       props: true,
       component: Person
     },
     {
       path: '/persons',
-      name: 'Persons',
+      name: 'persons',
       component: Persons
     },
     {
       path: '/markdown',
-      name: 'Markdown',
+      name: 'markdown',
       component: Markdown
     },
     {
       path: '/founded',
-      name: 'Founded',
+      name: 'founded',
       component: Founded
     },
     {

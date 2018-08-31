@@ -110,9 +110,11 @@ export default {
       let tags = this.tags.split(',')
 
       for (let i in tags) {
-        let key = tags[i].trim()
-          .replace(/[#| |$|%|^|&|*|(|)|@|!|?|>|<|/] /g, '_')
-        mapTags[key] = tags[i]
+        tags[i] = tags[i].trim()
+        let key = tags[i].replace(/[#| |$|%|^|&|*|(|)|@|!|?|>|<|/]/g, '_')
+        if (tags[i].length > 0) {
+          mapTags[key] = tags[i]
+        }
       }
 
       let published = this.published ? 1 : 0
@@ -160,6 +162,7 @@ export default {
           for (let i in r.data.article.tags) {
             this.tags += r.data.article.tags[i] + ', '
           }
+          this.tags = this.tags.substr(0, this.tags.length - 2)
           this.published = r.data.article.published
           if (!r.data.article.is_owner) {
             this.$router.push({path: 'a', params: { id: this.id }})
@@ -184,6 +187,5 @@ export default {
       }
     })
   }
-
 }
 </script>

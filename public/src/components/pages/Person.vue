@@ -11,7 +11,10 @@
           <div class="col-md-7 text-left">
             <p>nickname: <strong>{{nickName}}</strong></p>
             <p>about: <strong>{{person}}</strong></p>
-            <p v-if="isOwner">uuid: {{uuid}}</p>
+            <p v-if="isOwner">uuid:
+              <span v-if="!showUuid" @click="showUuid = true" class="pointer">Show</span>
+              <span v-if="showUuid">{{uuid}}</span>
+            </p>
             <p>
               <small class="text-muted">
                 Зареган: {{createdAt}}
@@ -48,9 +51,10 @@ import ResponseHandler from '../mixins/ResponseHandler.vue'
 import Logout from '../mixins/Logout.vue'
 import Search from '../parts/Search.vue'
 import Series from '../parts/series.vue'
+import Helper from '../mixins/Helper.vue'
 export default {
   name: 'Person',
-  mixins: [ResponseHandler, AuthHandler, Logout],
+  mixins: [ResponseHandler, AuthHandler, Logout, Helper],
   data () {
     return {
       id: 0,
@@ -62,6 +66,7 @@ export default {
       isOwner: false,
       userNotFound: false,
       userLoaded: false,
+      showUuid: false,
       avatarPath: '/static/assets/img/',
       urls: {
         getPerson: '/aj_get_person'
@@ -101,7 +106,7 @@ export default {
           this.person = r.data.person
           this.nickName = r.data.nick_name
           this.avatar = this.avatarPath + r.data.avatar
-          this.createdAt = r.data.created_at
+          this.createdAt = this.helpFormatDateTime(r.data.created_at)
           this.isOwner = r.data.is_owner
           this.userNotFound = false
           this.userLoaded = true

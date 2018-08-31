@@ -33,7 +33,7 @@
           <vue-markdown :source="article.text"></vue-markdown>
         </div>
       </div>
-      <div v-if="!article.published" class="text-center">
+      <div v-if="notPublished" class="text-center">
         <br>
         <h1 class="text-center">This article is not published yet</h1>
       </div>
@@ -62,9 +62,10 @@ import Markdown from 'vue-markdown'
 import Prism from 'prismjs'
 import ResponseHandler from '../mixins/ResponseHandler.vue'
 import AuthHandler from '../mixins/AuthHandler.vue'
+import Helper from '../mixins/Helper.vue'
 export default {
   name: 'Article',
-  mixins: [ResponseHandler, AuthHandler],
+  mixins: [ResponseHandler, AuthHandler, Helper],
   data () {
     return {
       next: false,
@@ -84,6 +85,7 @@ export default {
         nickName: ''
       },
       isLogged: false,
+      notPublished: false,
       notFound: false,
       urls: {
         getArticle: 'aj_get_article'
@@ -128,12 +130,13 @@ export default {
           this.article.title = r.data.article.title
           this.article.text = r.data.article.text
           this.article.tags = r.data.article.tags
-          this.article.createdAt = r.data.article.created
+          this.article.createdAt = this.helpFormatDateTime(r.data.article.created)
           this.article.published = r.data.article.published
           this.article.isOwner = r.data.article.is_owner
           this.author.id = r.data.author.id
           this.author.avatar = r.data.author.avatar
           this.author.nickName = r.data.author.nick_name
+          this.notPublished = !r.data.article.published
         } else {
           this.notFound = true
           this.responseFailHandle(r)
