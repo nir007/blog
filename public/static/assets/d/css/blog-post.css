@@ -27,6 +27,9 @@ body {
 .green-bg {
   background: #edffed;
 }
+
+.underline-link {text-decoration: underline;}
+
 .margin-top22px {margin-top: 22px}
 .margin-top50px {margin-top: 50px}
 .margin-top20px {margin-top: 20px}
@@ -37,7 +40,7 @@ body {
 .margin-bottom20px{margin-bottom: 20px}
 .margin-bottom5px {margin-bottom: 5px}
 .default-avatar {background: #5cb85c;border-radius: 900px; height: 90px; width: 90px}
-.avatar {margin: 15px; border-radius: 900px; border: 1px solid forestgreen; cursor: pointer;}
+.avatar {max-width: 100px; max-height: 100px; margin: 15px; border-radius: 900px; border: 1px solid forestgreen; cursor: pointer;}
 .avatar:hover {border-radius: 0px;}
 table.markup-help-table {
   border-collapse: collapse;
@@ -54,7 +57,6 @@ table.markup-help-table {
 .post__title_link:visited {
   color: #487284;
 }
-
 .post__title_link {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

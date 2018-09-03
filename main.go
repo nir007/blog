@@ -406,13 +406,15 @@ func getArticlesAction(w http.ResponseWriter, r *http.Request) {
 	tag := r.FormValue("tag")
 	limit := r.FormValue("limit")
 	offset := r.FormValue("offset")
+	showPublished := r.FormValue("show_published")
 
 	aId, _ := strconv.ParseInt(authorId, 10, 64)
 	perPage, _ := strconv.ParseInt(limit, 10, 64)
 	skip, _ := strconv.ParseInt(offset, 10, 64)
+	sPublished, _ := strconv.ParseInt(showPublished, 10, 64)
 
 	article := models.Article{}
-	articles, err := article.Get(aId, perPage, skip, tag)
+	articles, err := article.Get(sPublished, aId, perPage, skip, tag)
 
 	if err != nil {
 		response.Status = 500

@@ -48,37 +48,50 @@ export default {
   },
   props: {
     authorId: 'Number',
-    tag: 'String'
+    tag: 'String',
+    showPublished: 'Number'
+  },
+  methods: {
+    buildArticles (params) {
+      let tag = typeof this.tag !== 'undefined'
+        ? this.tag : ''
+
+      let showPublished = typeof this.showPublished !== 'undefined'
+        ? this.showPublished : 0
+
+      alert(showPublished)
+
+      this.$http.post(this.urls.getArticles,
+        'author_id=' + params.authorId +
+        '&tag=' + tag +
+        '&limit=' + this.limit +
+        '&offset=' + this.articles.length +
+        '&show_published=' + params.showPublished,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+          }
+        }
+      ).then(function (r) {
+        r = JSON.parse(r.bodyText)
+        if (r.status === 200) {
+          for (let i in r.data) {
+            this.articles.push(r.data[i])
+          }
+          this.isEmpty = this.articles.length === 0
+        } else {
+          this.responseFailHandle(r)
+        }
+      }, function () {
+        this.responseFailHandle({status: 500, data: '500 internal server error'})
+      })
+    }
   },
   mounted () {
-    let authorId = typeof this.authorId !== 'undefined'
-      ? this.authorId : 0
-
-    let tag = typeof this.tag !== 'undefined'
-      ? this.tag : ''
-
-    this.$http.post(this.urls.getArticles,
-      'author_id=' + authorId +
-      '&tag=' + tag +
-      '&limit=' + this.limit +
-      '&offset=' + this.articles.length,
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-        }
-      }
-    ).then(function (r) {
-      r = JSON.parse(r.bodyText)
-      if (r.status === 200) {
-        for (let i in r.data) {
-          this.articles.push(r.data[i])
-        }
-        this.isEmpty = this.articles.length === 0
-      } else {
-        this.responseFailHandle(r)
-      }
-    }, function () {
-      this.responseFailHandle({status: 500, data: '500 internal server error'})
+    let self = this
+    this.buildArticles()
+    this.$root.$on('build_articles', function (params) {
+      self.buildArticles(params)
     })
   }
 }
