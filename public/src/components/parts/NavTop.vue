@@ -56,7 +56,7 @@
 </template>
 
 <script>
-import SingIn from '../modals/SignIn.vue'
+import SignIn from '../modals/SignIn.vue'
 import Join from '../modals/Join.vue'
 export default {
   name: 'NavTop',
@@ -116,7 +116,7 @@ export default {
     }
   },
   components: {
-    'sing-in': SingIn,
+    'sing-in': SignIn,
     'join': Join
   },
   methods: {

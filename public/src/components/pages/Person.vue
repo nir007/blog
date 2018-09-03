@@ -28,7 +28,27 @@
           </div>
         </div>
       </div>
-      <articles v-if="userLoaded" v-bind:author-id="id"></articles>
+      <b-button-group v-if="isOwner">
+        <p class="margin-top15px">Articles:</p>
+        <b-button class="active" variant="link"
+                  @click="sPublished"
+                  v-bind:class="{'underline-link':showPublished}"
+
+        > published
+        </b-button>
+        <b-button variant="link"
+                  @click="sUnPublished"
+                  v-bind:class="{'underline-link':!showPublished}"
+        > unpublished
+        </b-button>
+      </b-button-group>
+      <div class="pub" v-if="showPublished">
+        <articles v-if="userLoaded"></articles>
+      </div>
+      <hr>
+      <div class="unpub" v-if="!showPublished">
+        <articles v-if="userLoaded"></articles>
+      </div>
     </div>
     <div v-if="userNotFound" class="text-center">
       <img src="/static/assets/img/no-dead-links.jpg" alt="user not found" >
@@ -67,11 +87,15 @@ export default {
       userNotFound: false,
       userLoaded: false,
       showUuid: false,
+      showPublished: true,
       avatarPath: '/static/assets/img/',
       urls: {
         getPerson: '/aj_get_person'
       }
     }
+  },
+  updated () {
+    console.log(this.showPublished)
   },
   components: {
     'articles': Articles,
@@ -85,6 +109,20 @@ export default {
       setTimeout(function () {
         location.href = '#/articles'
       }, 500)
+    },
+    sPublished () {
+      this.showPublished = true
+      this.$root.$emit('build_articles', {
+        authorId: this.authorId,
+        showPublished: this.showPublished
+      })
+    },
+    sUnPublished () {
+      this.showPublished = false
+      this.$root.$emit('build_articles', {
+        authorId: this.authorId,
+        showPublished: this.showPublished
+      })
     }
   },
   created () {

@@ -49,7 +49,7 @@ const selectTags = `SELECT DISTINCT tags
 	FROM db_schema.article WHERE published = 1::bit`
 
 const selectForAuthor = `SELECT id, author_id, title, text, tags, created_at, published 
-	FROM db_schema.article WHERE author_id = $1 
+	FROM db_schema.article WHERE author_id = $1 AND published = $4::bit 
 	ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 
 const selectPublishedForAuthor = `SELECT id, author_id, title, text, tags, created_at
@@ -194,7 +194,7 @@ func (a *Article) GetPublished(authorId, perPage, skip int64) (result []Article,
 	return result, err
 }
 
-func (a *Article) Get(authorId, perPage, skip int64, tag string) (result []Article, err error) {
+func (a *Article) Get(sPublished, authorId, perPage, skip int64, tag string) (result []Article, err error) {
 	pg := services.Pg{}
 	var rows *sql.Rows
 
@@ -202,8 +202,10 @@ func (a *Article) Get(authorId, perPage, skip int64, tag string) (result []Artic
 		perPage = 10
 	}
 
+	fmt.Println(sPublished)
+
 	if authorId > 0 {
-		rows, err = pg.ExecuteSelect(selectForAuthor, authorId, perPage, skip)
+		rows, err = pg.ExecuteSelect(selectForAuthor, authorId, perPage, skip, sPublished)
 	} else if tag != "" {
 		rows, err = pg.ExecuteSelect(selectArticlesByTag, tag, perPage, skip)
 	} else {
