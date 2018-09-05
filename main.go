@@ -41,11 +41,12 @@ func main() {
 	router.HandleFunc("/get_articles", getArticlesAction)
 	router.HandleFunc("/get_published_articles", getPublishedArticles)
 	router.HandleFunc("/aj_get_article", getArticleAction)
+	router.HandleFunc("/remove_article", removeArticleAction)
 	router.HandleFunc("/aj_add_article", addArticleAction)
 	router.HandleFunc("/aj_update_article", updateArticleAction)
 	router.HandleFunc("/aj_get_person", getPersonAction)
 	router.HandleFunc("/aj_get_persons", getPersonsAction)
-	http.ListenAndServe(":82", router)
+	http.ListenAndServe(":89", router)
 }
 
 func indexAction(w http.ResponseWriter, r *http.Request) {
@@ -228,7 +229,7 @@ func isLoggedAction(w http.ResponseWriter, r *http.Request) {
 
 		if err2 != nil {
 			response.Status = 500
-			response.Data = "Какая то хуйня"
+			response.Data = "Wtf"
 		}
 	}
 
@@ -297,6 +298,35 @@ func getArticleAction(w http.ResponseWriter, r *http.Request) {
 				response.Status = 200
 				complexData["author"] = user
 				response.Data = complexData
+			}
+		}
+	}
+
+	w.Header().Set("Content-Type", contentTypeJson)
+	w.Write(response.ToBytes())
+}
+
+func removeArticleAction(w http.ResponseWriter, r *http.Request) {
+	response := models.Response{Status: 401, Data: "Unauthorized"}
+	id := r.FormValue("id")
+	uid, _ := r.Cookie(cookieNameId)
+
+	if uid != nil && id != "" {
+		articleId, _ := strconv.ParseInt(id, 10, 32)
+		article := models.Article{Id: int32(articleId)}
+		if user, _ := getLoggedUser(uid.Value); user.Id > 0 {
+			article.AuthorId = user.Id
+			id, err := article.Remove()
+
+			if err != nil {
+				response.Status = 500
+				response.Data = err
+			} else if id == 0{
+				response.Status = 404
+				response.Data = "impossible to delete this article"
+			} else {
+				response.Status = 200
+				response.Data = id
 			}
 		}
 	}

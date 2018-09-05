@@ -10,7 +10,8 @@ export default {
       codes: {
         500: 'danger',
         404: 'warning',
-        403: 'warning'
+        403: 'warning',
+        401: 'info'
       },
       defaultTimeout: 30000
     }

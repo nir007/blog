@@ -1,18 +1,10 @@
 <template>
   <div>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <b-navbar toggleable="md" type="dark" fixed="top" class="bg-dark">
       <div class="container">
-        <a class="navbar-brand" href="#/">{{logo}}</a>
-        <button class="navbar-toggler" type="button"
-                data-toggle="collapse"
-                data-target="#navbarResponsive"
-                aria-controls="navbarResponsive"
-                aria-expanded="false"
-                aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
+        <b-navbar-toggle target="nav_collapse"></b-navbar-toggle>
+        <b-navbar-brand href="#/articles">{{logo}}</b-navbar-brand>
+        <b-collapse is-nav id="nav_collapse">
           <ul class="navbar-nav ml-auto">
             <li v-for="item in menu.center" :key="item.id"
                 v-if="!item.reqAuth || isLogged"
@@ -29,7 +21,7 @@
                 :key="item.id"
                 v-bind:class="{active: item.active}"
                 v-if="((isLogged && item.reqAuth) ||
-                 (!isLogged && item.reqNotAuth))"
+                   (!isLogged && item.reqNotAuth))"
                 class="nav-item"
             >
               <a v-if="item.path"
@@ -47,9 +39,9 @@
               </a>
             </li>
           </ul>
-        </div>
+        </b-collapse>
       </div>
-    </nav>
+    </b-navbar>
     <sing-in></sing-in>
     <join></join>
   </div>

@@ -30,24 +30,32 @@
       </div>
       <b-button-group v-if="isOwner">
         <p class="margin-top15px">Articles:</p>
-        <b-button class="active" variant="link"
+        <b-button class="text-info"
+                  variant="link"
                   @click="sPublished"
-                  v-bind:class="{'underline-link':showPublished}"
-
+                  v-bind:class="{'underline-link strong-link':showPublished}"
         > published
         </b-button>
         <b-button variant="link"
+                  class="text-info"
                   @click="sUnPublished"
-                  v-bind:class="{'underline-link':!showPublished}"
+                  v-bind:class="{'underline-link strong-link':!showPublished}"
         > unpublished
         </b-button>
       </b-button-group>
-      <div class="pub" v-if="showPublished">
-        <articles v-if="userLoaded"></articles>
+      <div class="pub">
+        <articles
+          v-if="showPublished && userLoaded"
+          v-bind:author-id="id"
+          v-bind:show-published="1"
+        ></articles>
       </div>
-      <hr>
-      <div class="unpub" v-if="!showPublished">
-        <articles v-if="userLoaded"></articles>
+      <div class="unpub">
+        <articles
+          v-if="!showPublished && userLoaded && isOwner"
+          v-bind:author-id="id"
+          v-bind:show-published="0"
+        ></articles>
       </div>
     </div>
     <div v-if="userNotFound" class="text-center">
@@ -93,9 +101,6 @@ export default {
         getPerson: '/aj_get_person'
       }
     }
-  },
-  updated () {
-    console.log(this.showPublished)
   },
   components: {
     'articles': Articles,

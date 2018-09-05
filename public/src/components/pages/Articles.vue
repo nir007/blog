@@ -3,7 +3,7 @@
   <div class="col-lg-8">
     <articles v-bind:tag="tag"></articles>
   </div>
-  <div class="col-md-4">
+  <div class="col-lg-4">
     <search></search>
     <tags></tags>
   </div>

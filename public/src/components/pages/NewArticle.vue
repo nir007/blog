@@ -1,61 +1,61 @@
 <template>
-  <div class="root">
-    <div v-if="isLogged" class="row">
-      <div class="col-md-12 no-float">
-      <br>
-      <p>New article</p>
-        <div class="form-group">
-          <input v-model="title" type="text" class="form-control" placeholder="title">
-        </div>
-        <div class="form-group">
-          <input v-model="tags" type="text" class="form-control" placeholder="tags divide by comma">
-        </div>
-        <br>
-        <div class="form-group">
-          <div class="row">
-            <div class="col-md-6 text-right">
-              <p>publish after creating:</p>
-            </div>
-            <div class="col-md-6">
+
+    <div class="row margin-top20px">
+      <div class="col-lg-12">
+        <div v-if="isLogged">
+          <p>New article</p>
+          <div class="form-group">
+            <input v-model="title" type="text" class="form-control" placeholder="title">
+          </div>
+          <div class="form-group">
+            <input v-model="tags" type="text" class="form-control" placeholder="tags divide by comma">
+          </div>
+          <br>
+          <div class="form-group">
+            <div class="row">
+              <div class="col-md-6 text-right">
+                <p>publish after creating:</p>
+              </div>
+              <div class="col-md-6">
                 <switches style="margin-top: 8px" v-model="published"
                           theme="bootstrap"
                           color="info"
                           type-bold="true"
                 ></switches>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <b-form-textarea v-model="text"
+                             placeholder="Enter"
+                             :rows="10"
+                             :max-rows="15">
+            </b-form-textarea>
+            <small>
+              <a href="#/markdown" target="_blank">markdown help</a>
+            </small>
+            <hr>
+            <vue-markdown :source="text"></vue-markdown>
+          </div>
+          <div class="form-group" style="height: 60%; margin-top: 30px">
+            <hr>
+            <div @click="addArticle" class="btn btn-outline-secondary btn-block">
+              Save
             </div>
           </div>
         </div>
-        <div class="form-group">
-          <b-form-textarea v-model="text"
-                           placeholder="Enter"
-                           :rows="10"
-                           :max-rows="15">
-          </b-form-textarea>
-          <small>
-            <a href="#/markdown" target="_blank">markdown help</a>
-          </small>
-          <hr>
-          <vue-markdown :source="text"></vue-markdown>
-        </div>
-        <div class="form-group" style="height: 60%; margin-top: 30px">
-          <hr>
-          <div @click="addArticle" class="btn btn-outline-secondary btn-block">
-              <i class="fa fa-save"></i> Save
-          </div>
-        </div>
+      </div>
+      <div v-if="!isLogged" class="text-center"><br><br>
+        <a href="javascript:void(0)" @click="$root.$emit('join', {})">
+          [ join now! ]
+        </a> -
+        <a href="javascript:void(0)" @click="$root.$emit('signin', {})">
+          [ sign in ]
+        </a>
+        <br><br>
+        <h2>to continue</h2>
       </div>
     </div>
-    <div v-if="!isLogged" class="text-center"><br><br>
-      <a href="javascript:void(0)" @click="$root.$emit('join', {})">
-        [ join now! ]
-      </a> -
-      <a href="javascript:void(0)" @click="$root.$emit('signin', {})">
-        [ sign in ]
-      </a>
-      <br><br>
-      <h2>to continue</h2>
-    </div>
-  </div>
 </template>
 
 <script>

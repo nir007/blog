@@ -29,6 +29,7 @@ body {
 }
 
 .underline-link {text-decoration: underline;}
+.strong-link {font-weight: 900}
 
 .margin-top22px {margin-top: 22px}
 .margin-top50px {margin-top: 50px}
@@ -72,7 +73,7 @@ a {
 }
 
 .hiddenBlock {
-  background: #e0e0e0;
+  background: #F8F4FF;
 }
 
 .pointer {

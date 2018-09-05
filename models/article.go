@@ -65,6 +65,10 @@ const updateArticle = `UPDATE db_schema.article SET title = $1,
 	text = $2, tags = $3, published = $4
 	WHERE id = $5 AND author_id = $6 RETURNING id`
 
+const removeArticle = `DELETE FROM db_schema.article 
+	WHERE id = $1 AND author_id = $2
+	RETURNING id`
+
 type Article struct {
 	Id			int32				`json:"id,string,omitempty"`
 	SeriesId	int32				`json:"series_id,string,omitempty"`
@@ -144,6 +148,11 @@ func (a *Article) Update() (id int32, err error ) {
 	return id, err
 }
 
+func (a *Article) Remove() (id int32, err error ) {
+	pg := services.Pg{}
+	return pg.Execute(removeArticle, a.Id, a.AuthorId)
+}
+
 func (a *Article) GetPublished(authorId, perPage, skip int64) (result []Article, err error) {
 	pg := services.Pg{}
 	var rows *sql.Rows
@@ -201,8 +210,6 @@ func (a *Article) Get(sPublished, authorId, perPage, skip int64, tag string) (re
 	if perPage == 0 {
 		perPage = 10
 	}
-
-	fmt.Println(sPublished)
 
 	if authorId > 0 {
 		rows, err = pg.ExecuteSelect(selectForAuthor, authorId, perPage, skip, sPublished)
