@@ -17,6 +17,13 @@
         <small v-if="nickNameExists" class="text-danger">this nickname already used</small>
       </div>
       <div class="form-group">
+        <label>Phone number please</label>
+        <vue-tel-input v-model="phone"
+                       @onInput="onInputPhone"
+                      :preferredCountries="['us', 'gb', 'ua']">
+        </vue-tel-input>
+      </div>
+      <div class="form-group">
         <label>Point out you real face:</label>
         <div class="row">
           <img @click="setAvatar" class="avatar" src="/static/assets/img/confused.gif">
@@ -48,6 +55,7 @@ export default {
       person: '',
       nickName: '',
       avatar: '',
+      phone: '',
       urls: {
         join: '/aj_add_user',
         checkNickName: '/aj_get_check_nickname'
@@ -57,6 +65,9 @@ export default {
     }
   },
   methods: {
+    onInputPhone: function ({ number, isValid, country }) {
+      console.log(number, isValid, country)
+    },
     checkNickName: function () {
       this.$http.post(this.urls.checkNickName,
         'nickname=' + this.nickName,
