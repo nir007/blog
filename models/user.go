@@ -4,21 +4,26 @@ import (
 	"../services"
 	"time"
 	"database/sql"
+	"fmt"
+	"strings"
 )
 
-const insertUser = `INSERT INTO db_schema."user"(person, nick_name, avatar, uuid, created_at)
-	VALUES($1, $2, $3, $4, NOW()) RETURNING id`
+const insertUser = `INSERT INTO db_schema."user"(person, nick_name, avatar, uuid, created_at, country, phone)
+	VALUES($1, $2, $3, $4, NOW(), $5, $6) RETURNING id`
 
-const selectUser = `SELECT id, person, nick_name, avatar, uuid, created_at 
+const selectUser = `SELECT id, person, nick_name, avatar, uuid, created_at, country, phone, is_confirmed
 	FROM db_schema."user" WHERE id = $1`
 
 const selectUsers = `SELECT id, person, nick_name, avatar, created_at 
-	FROM db_schema."user"`
+	FROM db_schema."user" WHERE is_confirmed = 1::bit`
 
-const selectUserByUuid = `SELECT id, person, nick_name, avatar, uuid, created_at 
+const selectUserByUuid = `SELECT id, person, nick_name, avatar, uuid, created_at, country, phone 
 	FROM db_schema."user" WHERE uuid = $1`
 
 const findNickName = `SELECT count(*) AS count FROM db_schema."user" WHERE nick_name = $1`
+
+const findPhone = `SELECT count(*) AS count FROM db_schema."user"
+	WHERE position($1 in phone) > 0`
 
 var pg services.Pg
 
@@ -34,20 +39,47 @@ type User struct {
 	Uuid 		string		`json:"uuid"`
 	CreatedAt 	time.Time	`json:"created_at"`
 	IsOwner		bool		`json:"is_owner"`
+	Country		string		`json:"country"`
+	Phone		string 		`json:"phone"`
+	IsConfirmed rune		`json:"is_confirmed"`
 }
 
 func (u *User) Add() (err error) {
-	if exists, _ := u.NickNameExists(); !exists {
+	NameExists, _ := u.NickNameExists()
+	PhoneExists, _ := u.PhoneNumberExists()
+
+	if !NameExists && !PhoneExists {
 		u.Id, err = pg.Execute(
 			insertUser,
 			u.Person,
 			u.NickName,
 			u.Avatar,
 			u.Uuid,
+			u.Country,
+			u.Phone,
 		)
 	}
 
 	return err
+}
+
+func (u *User) PhoneNumberExists() (bool, error) {
+	var count int
+	var err error = nil
+	var rows *sql.Rows
+	fmt.Println(u.Phone)
+	if u.Phone != "" {
+		rows, err = pg.ExecuteSelect(findPhone, strings.Trim(u.Phone, " "))
+		if err == nil {
+			for rows.Next() {
+				rows.Scan(&count)
+			}
+		}
+	}
+
+	fmt.Println(count)
+
+	return count > 0, err
 }
 
 func (u *User) NickNameExists() (bool, error) {
@@ -81,6 +113,8 @@ func (u *User) Exists() (bool, error) {
 					&u.Avatar,
 					&u.Uuid,
 					&u.CreatedAt,
+					&u.Country,
+					&u.Phone,
 				)
 			}
 		}
@@ -102,6 +136,9 @@ func (u *User) One(id int64) (err error) {
 				&u.Avatar,
 				&u.Uuid,
 				&u.CreatedAt,
+				&u.Country,
+				&u.Phone,
+				&u.IsConfirmed,
 			)
 		}
 	}

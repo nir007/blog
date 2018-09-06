@@ -2,7 +2,7 @@
 <div class="row">
   <div class="col-lg-8">
     <br>
-    <div v-if="!userNotFound">
+    <div v-if="!userNotFound && userLoaded && isConfirmed">
       <div class="card p-3">
         <div class="row">
           <div class="col-md-3">
@@ -11,6 +11,8 @@
           <div class="col-md-7 text-left">
             <p>nickname: <strong>{{nickName}}</strong></p>
             <p>about: <strong>{{person}}</strong></p>
+            <p>country: <strong>{{country}}</strong></p>
+            <p v-if="isOwner">phone: <strong>{{phone}}</strong></p>
             <p v-if="isOwner">uuid:
               <span v-if="!showUuid" @click="showUuid = true" class="pointer">Show</span>
               <span v-if="showUuid">{{uuid}}</span>
@@ -22,7 +24,9 @@
             </p>
           </div>
           <div class="col-md-2 text-center">
-            <span class="pointer" v-if="isOwner" v-on:click="userLogout">
+            <span class="pointer text-info underline-link"
+                  v-if="isOwner"
+                  v-on:click="logout">
               Logout
             </span>
           </div>
@@ -58,6 +62,12 @@
         ></articles>
       </div>
     </div>
+    <div class="card p-3" v-if="userLoaded && !isConfirmed && isOwner">
+      <confirm-phone
+        v-bind:is-owner="isOwner"
+        v-bind:phone="phone">
+      </confirm-phone>
+    </div>
     <div v-if="userNotFound" class="text-center">
       <img src="/static/assets/img/no-dead-links.jpg" alt="user not found" >
       <h1 class="text-center">User not found</h1>
@@ -65,7 +75,7 @@
   </div>
   <div class="col-lg-4">
     <search></search>
-    <series v-if="userLoaded && isOwner" v-bind:author-id="id"></series>
+    <series v-if="userLoaded && isOwner && isConfirmed" v-bind:author-id="id"></series>
     <tags></tags>
   </div>
 </div>
@@ -78,8 +88,9 @@ import AuthHandler from '../mixins/AuthHandler.vue'
 import ResponseHandler from '../mixins/ResponseHandler.vue'
 import Logout from '../mixins/Logout.vue'
 import Search from '../parts/Search.vue'
-import Series from '../parts/series.vue'
+import Series from '../parts/Series.vue'
 import Helper from '../mixins/Helper.vue'
+import ConfirmPhone from '../parts/ConfirmPhone.vue'
 export default {
   name: 'Person',
   mixins: [ResponseHandler, AuthHandler, Logout, Helper],
@@ -89,12 +100,15 @@ export default {
       uuid: '',
       person: '',
       nickName: '',
+      country: '',
+      phone: '',
       avatar: '',
       createdAt: '',
       isOwner: false,
       userNotFound: false,
       userLoaded: false,
       showUuid: false,
+      isConfirmed: false,
       showPublished: true,
       avatarPath: '/static/assets/img/',
       urls: {
@@ -103,18 +117,13 @@ export default {
     }
   },
   components: {
+    'confirm-phone': ConfirmPhone,
     'articles': Articles,
     'search': Search,
     'tags': Tags,
     'series': Series
   },
   methods: {
-    userLogout: function () {
-      this.logout()
-      setTimeout(function () {
-        location.href = '#/articles'
-      }, 500)
-    },
     sPublished () {
       this.showPublished = true
       this.$root.$emit('build_articles', {
@@ -131,7 +140,7 @@ export default {
     }
   },
   created () {
-    var id = typeof this.$route.params.id !== 'undefined'
+    let id = typeof this.$route.params.id !== 'undefined'
       ? this.$route.params.id : 0
     this.id = id
     this.$http.post(this.urls.getPerson,
@@ -149,6 +158,9 @@ export default {
           this.person = r.data.person
           this.nickName = r.data.nick_name
           this.avatar = this.avatarPath + r.data.avatar
+          this.country = r.data.country
+          this.phone = r.data.phone
+          this.isConfirmed = r.data.is_confirmed
           this.createdAt = this.helpFormatDateTime(r.data.created_at)
           this.isOwner = r.data.is_owner
           this.userNotFound = false

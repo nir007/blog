@@ -1,13 +1,12 @@
 <template>
   <div>
     <b-modal size="sm" centered ref="warning" hide-footer title="Warning">
-      <div class="d-block text-center">
-        <ul>
-          <li v-for="(item) in warnings" :key="item.id">
+      <div class="d-block">
+        <ul class="ist-group list-group-flush">
+          <li class="list-group-item" v-for="(item) in warnings" :key="item.id">
             {{item}}
           </li>
         </ul>
-        <br>
       </div>
       <div class="modal-footer">
         <b-btn variant="outline-danger" block @click="hideModal">

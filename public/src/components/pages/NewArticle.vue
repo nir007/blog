@@ -1,61 +1,66 @@
 <template>
-
-    <div class="row margin-top20px">
-      <div class="col-lg-12">
-        <div v-if="isLogged">
-          <p>New article</p>
-          <div class="form-group">
-            <input v-model="title" type="text" class="form-control" placeholder="title">
-          </div>
-          <div class="form-group">
-            <input v-model="tags" type="text" class="form-control" placeholder="tags divide by comma">
-          </div>
-          <br>
-          <div class="form-group">
-            <div class="row">
-              <div class="col-md-6 text-right">
-                <p>publish after creating:</p>
-              </div>
-              <div class="col-md-6">
-                <switches style="margin-top: 8px" v-model="published"
-                          theme="bootstrap"
-                          color="info"
-                          type-bold="true"
-                ></switches>
-              </div>
+  <div class="row margin-top20px">
+    <div class="col-lg-12">
+      <div v-if="isLogged && loggedUser.is_confirmed">
+        <p>New article</p>
+        <div class="form-group">
+          <input v-model="title" type="text" class="form-control" placeholder="title">
+        </div>
+        <div class="form-group">
+          <input v-model="tags" type="text" class="form-control" placeholder="tags divide by comma">
+        </div>
+        <br>
+        <div class="form-group">
+          <div class="row">
+            <div class="col-md-6 text-right">
+              <p>publish after creating:</p>
             </div>
-          </div>
-          <div class="form-group">
-            <b-form-textarea v-model="text"
-                             placeholder="Enter"
-                             :rows="10"
-                             :max-rows="15">
-            </b-form-textarea>
-            <small>
-              <a href="#/markdown" target="_blank">markdown help</a>
-            </small>
-            <hr>
-            <vue-markdown :source="text"></vue-markdown>
-          </div>
-          <div class="form-group" style="height: 60%; margin-top: 30px">
-            <hr>
-            <div @click="addArticle" class="btn btn-outline-secondary btn-block">
-              Save
+            <div class="col-md-6">
+              <switches style="margin-top: 8px" v-model="published"
+                        theme="bootstrap"
+                        color="info"
+                        type-bold="true"
+              ></switches>
             </div>
           </div>
         </div>
-      </div>
-      <div v-if="!isLogged" class="text-center"><br><br>
-        <a href="javascript:void(0)" @click="$root.$emit('join', {})">
-          [ join now! ]
-        </a> -
-        <a href="javascript:void(0)" @click="$root.$emit('signin', {})">
-          [ sign in ]
-        </a>
-        <br><br>
-        <h2>to continue</h2>
+        <div class="form-group">
+          <b-form-textarea v-model="text"
+                           placeholder="Enter"
+                           :rows="10"
+                           :max-rows="15">
+          </b-form-textarea>
+          <small>
+            <a href="#/markdown" target="_blank">markdown help</a>
+          </small>
+          <hr>
+          <vue-markdown :source="text"></vue-markdown>
+        </div>
+        <div class="form-group" style="height: 60%; margin-top: 30px">
+          <hr>
+          <div @click="addArticle" class="btn btn-outline-secondary btn-block">
+            Save
+          </div>
+        </div>
       </div>
     </div>
+    <div class="col-lg-12 margin-top50px" v-if="isLogged && !loggedUser.is_confirmed">
+      <confirm-phone
+        v-bind:is-owner="1"
+        v-bind:phone="loggedUser.phone">
+      </confirm-phone>
+    </div>
+    <div v-if="!isLogged && !loggedUser.is_confirmed" class="text-center margin-top50px">
+      <a href="javascript:void(0)" @click="$root.$emit('join', {})">
+        [ join now! ]
+      </a> -
+      <a href="javascript:void(0)" @click="$root.$emit('signin', {})">
+        [ sign in ]
+      </a>
+      <br><br>
+      <h2>to continue</h2>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -64,6 +69,7 @@ import Markdown from 'vue-markdown'
 import Prism from 'prismjs'
 import AuthHandler from '../mixins/AuthHandler.vue'
 import ResponseHandler from '../mixins/ResponseHandler.vue'
+import ConfirmPhone from '../parts/ConfirmPhone.vue'
 export default {
   name: 'NewArticle',
   mixins: [ResponseHandler, AuthHandler],
@@ -82,6 +88,7 @@ export default {
     }
   },
   components: {
+    'confirm-phone': ConfirmPhone,
     'switches': Switches,
     'vue-markdown': Markdown
   },

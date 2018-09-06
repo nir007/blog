@@ -53,8 +53,6 @@ func (p *Pg) Execute(query string, args ...interface{}) (id int32, err error) {
 		row.Scan(&id)
 	}
 
-	fmt.Println("row_id: ", id)
-
 	return id, err
 }
 
@@ -64,7 +62,6 @@ func (p *Pg) ExecuteSelect(query string, args ...interface{}) (rows *sql.Rows, e
 	}
 
 	stmt, err := db.Prepare(p.setSchema(query))
-
 
 	if err != nil {
 		return rows, err

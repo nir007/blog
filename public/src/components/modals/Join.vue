@@ -20,8 +20,9 @@
         <label>Phone number please</label>
         <vue-tel-input v-model="phone"
                        @onInput="onInputPhone"
-                      :preferredCountries="['us', 'gb', 'ua']">
+                      :preferredCountries="['us', 'gb', 'ua', 'ru']">
         </vue-tel-input>
+        <small v-if="phoneExists" class="text-danger">this number already used</small>
       </div>
       <div class="form-group">
         <label>Point out you real face:</label>
@@ -56,17 +57,24 @@ export default {
       nickName: '',
       avatar: '',
       phone: '',
+      country: '',
+      phoneIsValid: false,
       urls: {
         join: '/aj_add_user',
-        checkNickName: '/aj_get_check_nickname'
+        checkNickName: '/aj_get_check_nickname',
+        checkPhoneExists: '/aj_get_check_phone'
       },
       nickNameExists: false,
+      phoneExists: false,
       warnings: []
     }
   },
   methods: {
     onInputPhone: function ({ number, isValid, country }) {
-      console.log(number, isValid, country)
+      this.phone = number
+      this.country = country != null ? country.name : ''
+      this.phoneIsValid = isValid
+      this.checkPhone()
     },
     checkNickName: function () {
       this.$http.post(this.urls.checkNickName,
@@ -80,15 +88,28 @@ export default {
         r = JSON.parse(r.bodyText)
         if (r.status === 200) {
           this.nickNameExists = r.data
-        } else {
-          this.responseFailHandle(r)
-        }
-      }, function (e) {
-        if (e != null && typeof e === 'object') {
-          let err = 'data' in e ? e.data : 'Some internal server error'
-          this.responseFailHandle({status: 500, data: err})
         }
       })
+    },
+    checkPhone: function () {
+      if (this.phoneIsValid) {
+        this.$http.post(this.urls.checkPhoneExists,
+          'phone=' + this.phone,
+          {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            }
+          }
+        ).then(function (r) {
+          r = JSON.parse(r.bodyText)
+          console.log(r)
+          if (r.status === 200) {
+            this.phoneExists = r.data
+          }
+        })
+      } else {
+        this.phoneExists = false
+      }
     },
     handleOk: function () {
       this.warnings = []
@@ -104,6 +125,10 @@ export default {
         this.warnings.push('Enter the other nickname')
       }
 
+      if (!this.phoneIsValid) {
+        this.warnings.push('Enter your phone number')
+      }
+
       if (!this.avatar) {
         this.warnings.push('Point out the avatar')
       }
@@ -117,7 +142,9 @@ export default {
         {
           person: this.person,
           nick_name: this.nickName,
-          avatar: this.avatar
+          avatar: this.avatar,
+          country: this.country,
+          phone: this.phone
         },
         {
           headers: {
@@ -127,6 +154,7 @@ export default {
       )
         .then(function (r) {
           r = JSON.parse(r.bodyText)
+          console.log(r)
           if (r.status === 200) {
             location.href = '#/person/'
           } else {
@@ -140,7 +168,9 @@ export default {
       this.person = ''
       this.nickName = ''
       this.avatar = ''
+      this.phone = ''
       this.nickNameExists = false
+      this.phoneExists = false
       this.resetAvatar()
     },
     resetAvatar: function () {

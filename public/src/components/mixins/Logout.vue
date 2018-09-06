@@ -8,6 +8,9 @@ export default {
   methods: {
     logout: function () {
       this.$http.get('/logout')
+      setTimeout(function () {
+        location.href = '#/articles'
+      }, 1000)
     }
   }
 }

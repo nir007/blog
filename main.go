@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"fmt"
 )
 
 const cookieNameId = "uuid"
@@ -25,18 +26,16 @@ func main() {
 
 	router.HandleFunc("/", indexAction)
 	router.HandleFunc("/logout", logout)
-
 	router.HandleFunc("/aj_add_user", addUserAction)
 	router.HandleFunc("/aj_get_tags", getTags)
 	router.HandleFunc("/aj_sign_in", signInAction)
 	router.HandleFunc("/aj_get_check_nickname", checkNickNameAction)
 	router.HandleFunc("/aj_is_logged", isLoggedAction)
-
+	router.HandleFunc("/aj_get_check_phone", checkPhoneNumberAction)
 	router.HandleFunc("/create_series", createSeriesAction)
 	router.HandleFunc("/get_one_series", getOneSeriesAction)
 	router.HandleFunc("/delete_series", deleteSeriesAction)
 	router.HandleFunc("/update_series", updateSeriesAction)
-
 	router.HandleFunc("/get_user_series", getUserSeries)
 	router.HandleFunc("/get_articles", getArticlesAction)
 	router.HandleFunc("/get_published_articles", getPublishedArticles)
@@ -471,6 +470,25 @@ func getArticlesAction(w http.ResponseWriter, r *http.Request) {
 	w.Write(response.ToBytes())
 }
 
+func checkPhoneNumberAction(w http.ResponseWriter, r *http.Request) {
+	response := models.Response{}
+	phone := r.FormValue("phone")
+	user := models.User{Phone: phone}
+
+	fmt.Println(phone)
+
+	if exists, err := user.PhoneNumberExists(); err == nil {
+		response.Status = 200
+		response.Data = exists
+	} else {
+		response.Status = 500
+		response.Data = err
+	}
+
+	w.Header().Set("Content-Type", contentTypeJson)
+	w.Write(response.ToBytes())
+}
+
 func checkNickNameAction(w http.ResponseWriter, r *http.Request) {
 	response := models.Response{}
 	nickName := r.FormValue("nickname")
@@ -494,6 +512,8 @@ func addUserAction(w http.ResponseWriter, r *http.Request) {
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 
+	fmt.Println(user)
+
 	if err != nil {
 		response.Status = 500
 		response.Data = err.Error()
@@ -505,6 +525,8 @@ func addUserAction(w http.ResponseWriter, r *http.Request) {
 			NickName: user.NickName,
 			Avatar:   user.Avatar,
 			Uuid:     uid.String(),
+			Country:  user.Country,
+			Phone:    user.Phone,
 		}
 
 		if errAdd := newUser.Add(); errAdd != nil {
@@ -512,7 +534,7 @@ func addUserAction(w http.ResponseWriter, r *http.Request) {
 			response.Data = newUser
 		} else if newUser.Id == 0 {
 			response.Status = 403
-			response.Data = "nickName already used"
+			response.Data = "authentication data is already used"
 		} else {
 			cookie := http.Cookie{
 				Name:    cookieNameId,
