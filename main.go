@@ -31,6 +31,7 @@ func main() {
 	router.HandleFunc("/aj_sign_in", signInAction)
 	router.HandleFunc("/aj_get_check_nickname", checkNickNameAction)
 	router.HandleFunc("/aj_is_logged", isLoggedAction)
+	router.HandleFunc("/aj_confirm_phone", confirmPhoneAction)
 	router.HandleFunc("/aj_get_check_phone", checkPhoneNumberAction)
 	router.HandleFunc("/create_series", createSeriesAction)
 	router.HandleFunc("/get_one_series", getOneSeriesAction)
@@ -237,6 +238,19 @@ func isLoggedAction(w http.ResponseWriter, r *http.Request) {
 			response.Status = 200
 			response.Data = u
 		}
+	}
+
+	w.Header().Set("Content-Type", contentTypeJson)
+	w.Write(response.ToBytes())
+}
+
+func confirmPhoneAction(w http.ResponseWriter, r *http.Request) {
+	response := models.Response{}
+	uid, err := r.Cookie(cookieNameId)
+
+	if err == nil {
+		user, _ := getLoggedUser(uid.Value)
+		user.ConfirmPhone("3456")
 	}
 
 	w.Header().Set("Content-Type", contentTypeJson)

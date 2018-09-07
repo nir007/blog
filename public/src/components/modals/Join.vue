@@ -56,7 +56,7 @@ export default {
       person: '',
       nickName: '',
       avatar: '',
-      phone: '',
+      phone: '9690173934',
       country: '',
       phoneIsValid: false,
       urls: {

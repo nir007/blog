@@ -4,8 +4,8 @@ import (
 	"../services"
 	"time"
 	"database/sql"
-	"fmt"
 	"strings"
+	"errors"
 )
 
 const insertUser = `INSERT INTO db_schema."user"(person, nick_name, avatar, uuid, created_at, country, phone)
@@ -20,12 +20,14 @@ const selectUsers = `SELECT id, person, nick_name, avatar, created_at
 const selectUserByUuid = `SELECT id, person, nick_name, avatar, uuid, created_at, country, phone 
 	FROM db_schema."user" WHERE uuid = $1`
 
-const findNickName = `SELECT count(*) AS count FROM db_schema."user" WHERE nick_name = $1`
+const findNickName = `SELECT count(*) AS count FROM db_schema."user" 
+	WHERE nick_name = $1`
 
 const findPhone = `SELECT count(*) AS count FROM db_schema."user"
 	WHERE position($1 in phone) > 0`
 
-var pg services.Pg
+const setConfirmed = `UPDATE db_schema."user" SET is_confirmed = 1::bit
+	WHERE id = $1 AND phone = $2 RETURNING id`
 
 func init() {
 	pg = services.Pg{}
@@ -45,10 +47,12 @@ type User struct {
 }
 
 func (u *User) Add() (err error) {
+	code := "3456"
 	NameExists, _ := u.NickNameExists()
 	PhoneExists, _ := u.PhoneNumberExists()
 
 	if !NameExists && !PhoneExists {
+
 		u.Id, err = pg.Execute(
 			insertUser,
 			u.Person,
@@ -58,6 +62,29 @@ func (u *User) Add() (err error) {
 			u.Country,
 			u.Phone,
 		)
+
+		if err == nil && u.Id > 0 {
+			sendPulse := services.SendPulse{}
+
+			errConfig := sendPulse.SetFromConfig()
+			errSending := sendPulse.Send(code)
+
+			if errConfig != nil {
+				return errors.New("fail config sending confirmation code")
+			}
+
+			if errSending != nil {
+				return errors.New("fail with sending confirmation code")
+			}
+
+			attemptConfirm := AttemptConfirm{
+				Uid: u.Id,
+				Code: code,
+				Phone: u.Phone,
+				Date: time.Now(),
+			}
+			attemptConfirm.Add()
+		}
 	}
 
 	return err
@@ -67,7 +94,7 @@ func (u *User) PhoneNumberExists() (bool, error) {
 	var count int
 	var err error = nil
 	var rows *sql.Rows
-	fmt.Println(u.Phone)
+
 	if u.Phone != "" {
 		rows, err = pg.ExecuteSelect(findPhone, strings.Trim(u.Phone, " "))
 		if err == nil {
@@ -77,8 +104,6 @@ func (u *User) PhoneNumberExists() (bool, error) {
 		}
 	}
 
-	fmt.Println(count)
-
 	return count > 0, err
 }
 
@@ -86,6 +111,7 @@ func (u *User) NickNameExists() (bool, error) {
 	var count int
 	var err error = nil
 	var rows *sql.Rows
+
 	if u.NickName != "" {
 		rows, err = pg.ExecuteSelect(findNickName, u.NickName)
 		if err == nil {
@@ -168,4 +194,26 @@ func (u *User) Get(limit, skip int64) (result []User, err error) {
 	}
 
 	return result, err
+}
+
+func (u *User) ConfirmPhone(code string) (confirmed bool, err error) {
+	a := AttemptConfirm{
+		Uid: u.Id,
+		Code: code,
+		Phone: u.Phone,
+	}
+
+	codeExists, err := a.CodeExists()
+
+	if err == nil && codeExists {
+		id, err := pg.Execute(
+			setConfirmed,
+			u.Id,
+			u.Phone,
+		)
+
+		confirmed = id > 0 && err == nil
+	}
+
+	return confirmed, err
 }
