@@ -139,7 +139,7 @@ export default {
       })
     }
   },
-  created () {
+  mounted () {
     let id = typeof this.$route.params.id !== 'undefined'
       ? this.$route.params.id : 0
     this.id = id
@@ -152,6 +152,7 @@ export default {
       })
       .then(function (r) {
         r = JSON.parse(r.bodyText)
+        console.log(r)
         if (r.status === 200) {
           this.id = r.data.id
           this.uuid = r.data.uuid

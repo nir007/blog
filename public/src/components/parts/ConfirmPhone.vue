@@ -8,6 +8,7 @@
       <div class="row">
         <div class="col-lg-10">
           <input v-model="code" class="form-control" type="text" maxlength="5" placeholder="code">
+          <small v-if="isEmptyCode" class="text-danger">enter code</small>
         </div>
         <div class="col-lg-2">
           <button @click="confirm" type="button" class="btn btn-success">
@@ -21,12 +22,14 @@
 
 <script>
 import Logout from '../mixins/Logout.vue'
+import ResponseHandler from '../mixins/ResponseHandler.vue'
 export default {
   name: 'ConfirmPhone',
-  mixins: [Logout],
+  mixins: [Logout, ResponseHandler],
   data () {
     return {
       code: '',
+      isEmptyCode: false,
       url: 'aj_confirm_phone'
     }
   },
@@ -36,6 +39,12 @@ export default {
   },
   methods: {
     confirm () {
+      if (!this.code) {
+        this.isEmptyCode = true
+        return
+      }
+
+      this.isEmptyCode = false
       this.$http.post(this.url, 'code=' + this.code,
         {
           headers: {
@@ -44,7 +53,11 @@ export default {
         }
       ).then(function (r) {
         r = JSON.parse(r.bodyText)
-        console.log(r)
+        if (r.status === 200) {
+          location.reload()
+        } else {
+          this.responseFailHandle(r)
+        }
       })
     }
   }

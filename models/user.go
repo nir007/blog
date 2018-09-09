@@ -6,6 +6,8 @@ import (
 	"database/sql"
 	"strings"
 	"errors"
+	"math/rand"
+	"strconv"
 )
 
 const insertUser = `INSERT INTO db_schema."user"(person, nick_name, avatar, uuid, created_at, country, phone)
@@ -17,7 +19,7 @@ const selectUser = `SELECT id, person, nick_name, avatar, uuid, created_at, coun
 const selectUsers = `SELECT id, person, nick_name, avatar, created_at 
 	FROM db_schema."user" WHERE is_confirmed = 1::bit`
 
-const selectUserByUuid = `SELECT id, person, nick_name, avatar, uuid, created_at, country, phone 
+const selectUserByUuid = `SELECT id, person, nick_name, avatar, uuid, created_at, country, phone, is_confirmed
 	FROM db_schema."user" WHERE uuid = $1`
 
 const findNickName = `SELECT count(*) AS count FROM db_schema."user" 
@@ -47,7 +49,10 @@ type User struct {
 }
 
 func (u *User) Add() (err error) {
-	code := "3456"
+	rand.Seed(time.Now().UTC().UnixNano())
+	code := strconv.Itoa(rand.Intn(100))
+	code += strconv.Itoa(rand.Intn(1000))
+
 	NameExists, _ := u.NickNameExists()
 	PhoneExists, _ := u.PhoneNumberExists()
 
@@ -65,9 +70,8 @@ func (u *User) Add() (err error) {
 
 		if err == nil && u.Id > 0 {
 			sendPulse := services.SendPulse{}
-
 			errConfig := sendPulse.SetFromConfig()
-			errSending := sendPulse.Send(code)
+			errSending := sendPulse.Send(u.Phone, code)
 
 			if errConfig != nil {
 				return errors.New("fail config sending confirmation code")
@@ -79,7 +83,7 @@ func (u *User) Add() (err error) {
 
 			attemptConfirm := AttemptConfirm{
 				Uid: u.Id,
-				Code: code,
+				Code: string(code),
 				Phone: u.Phone,
 				Date: time.Now(),
 			}
@@ -141,6 +145,7 @@ func (u *User) Exists() (bool, error) {
 					&u.CreatedAt,
 					&u.Country,
 					&u.Phone,
+					&u.IsConfirmed,
 				)
 			}
 		}

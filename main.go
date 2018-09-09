@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./services"
 	"./models"
 	"encoding/json"
 	"github.com/gorilla/mux"
@@ -9,7 +10,6 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-	"fmt"
 )
 
 const cookieNameId = "uuid"
@@ -18,6 +18,11 @@ const contentTypeJson = "application/json"
 var loggedUsers = make(map[string]models.User, 10)
 
 func main() {
+
+	sendPulse := services.SendPulse{}
+	sendPulse.SetFromConfig()
+	sendPulse.Send("9261157157","34563")
+
 	router := mux.NewRouter()
 
 	fs := http.FileServer(http.Dir("./public/dist/static"))
@@ -46,7 +51,7 @@ func main() {
 	router.HandleFunc("/aj_update_article", updateArticleAction)
 	router.HandleFunc("/aj_get_person", getPersonAction)
 	router.HandleFunc("/aj_get_persons", getPersonsAction)
-	http.ListenAndServe(":89", router)
+	http.ListenAndServe(":80", router)
 }
 
 func indexAction(w http.ResponseWriter, r *http.Request) {
@@ -245,12 +250,23 @@ func isLoggedAction(w http.ResponseWriter, r *http.Request) {
 }
 
 func confirmPhoneAction(w http.ResponseWriter, r *http.Request) {
-	response := models.Response{}
+	response := models.Response{Status: 404, Data: "not to confirm"}
+	confirmCode := r.FormValue("code")
 	uid, err := r.Cookie(cookieNameId)
 
-	if err == nil {
+	if err == nil && len(confirmCode) > 0 {
 		user, _ := getLoggedUser(uid.Value)
-		user.ConfirmPhone("3456")
+		confirmed, err := user.ConfirmPhone(confirmCode)
+		if err != nil {
+			response.Status = 500
+			response.Data = err
+		} else if !confirmed {
+			response.Status = 403
+			response.Data = "bad code"
+		} else {
+			response.Status = 200
+			response.Data = confirmed
+		}
 	}
 
 	w.Header().Set("Content-Type", contentTypeJson)
@@ -489,8 +505,6 @@ func checkPhoneNumberAction(w http.ResponseWriter, r *http.Request) {
 	phone := r.FormValue("phone")
 	user := models.User{Phone: phone}
 
-	fmt.Println(phone)
-
 	if exists, err := user.PhoneNumberExists(); err == nil {
 		response.Status = 200
 		response.Data = exists
@@ -525,8 +539,6 @@ func addUserAction(w http.ResponseWriter, r *http.Request) {
 
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
-
-	fmt.Println(user)
 
 	if err != nil {
 		response.Status = 500
@@ -602,11 +614,12 @@ func signInAction(w http.ResponseWriter, r *http.Request) {
 func getPersonAction(w http.ResponseWriter, r *http.Request) {
 	response := models.Response{Status: 404, Data: false}
 	id := r.FormValue("id")
-	personId, _ := strconv.ParseInt(id, 10, 64)
+	personId, err := strconv.ParseInt(id, 10, 64)
+
 	var user models.User
 	uuidCookie, errCookie := r.Cookie(cookieNameId)
 
-	if personId > 0 {
+	if err == nil && personId > 0 {
 		user = models.User{}
 		if err := user.One(personId); err != nil {
 			response.Status = 500
@@ -619,6 +632,7 @@ func getPersonAction(w http.ResponseWriter, r *http.Request) {
 				user.IsOwner = true
 			} else {
 				user.Uuid = ""
+				user.Phone = ""
 			}
 			response.Status = 200
 			response.Data = user
