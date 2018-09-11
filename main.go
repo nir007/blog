@@ -1,8 +1,7 @@
 package main
 
 import (
-	"./services"
-	sms "./contracts"
+	"./models"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/satori/go.uuid"
@@ -19,10 +18,6 @@ var loggedUsers = make(map[string]models.User, 10)
 
 func main() {
 	router := mux.NewRouter()
-
-	sms := services.IQSms{}
-	sms.SetFromConfig()
-	sms.Send("", "")
 
 	fs := http.FileServer(http.Dir("./public/dist/static"))
 	rp := router.PathPrefix("/static/")
@@ -50,7 +45,15 @@ func main() {
 	router.HandleFunc("/aj_update_article", updateArticleAction)
 	router.HandleFunc("/aj_get_person", getPersonAction)
 	router.HandleFunc("/aj_get_persons", getPersonsAction)
-	http.ListenAndServe(":82", router)
+
+	go http.ListenAndServe(":80", http.HandlerFunc(redirect))
+	http.ListenAndServeTLS(":443", "rakan-tarakan.com.crt", "private.key", router)
+}
+
+func redirect(w http.ResponseWriter, req *http.Request) {
+	http.Redirect(w, req,
+		"https://" + req.Host + req.URL.String(),
+		http.StatusMovedPermanently)
 }
 
 func indexAction(w http.ResponseWriter, r *http.Request) {

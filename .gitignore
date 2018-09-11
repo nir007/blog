@@ -1,2 +1,5 @@
 .idea
 config
+chain.crt
+private.key
+rakan-tarakan.com.crt
