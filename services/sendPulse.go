@@ -69,12 +69,12 @@ func (s *SendPulse) getAuthToken() (string, error) {
 	return token, err
 }
 
-func (s *SendPulse) Send(phone, message string) (error) {
+func (s *SendPulse) Send(phone, message string) (map[string]interface{}, error) {
 
 	authToken, err := s.getAuthToken()
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	u, _ := url.ParseRequestURI(s.baseUrl)
@@ -103,5 +103,7 @@ func (s *SendPulse) Send(phone, message string) (error) {
 	mapBody := map[string]interface{}{}
 	body, _ := ioutil.ReadAll(resp.Body)
 
-	return json.Unmarshal(body, &mapBody)
+	err = json.Unmarshal(body, &mapBody)
+
+	return mapBody, err
 }

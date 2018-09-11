@@ -2,7 +2,7 @@ package main
 
 import (
 	"./services"
-	"./models"
+	sms "./contracts"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/satori/go.uuid"
@@ -18,12 +18,11 @@ const contentTypeJson = "application/json"
 var loggedUsers = make(map[string]models.User, 10)
 
 func main() {
-
-	sendPulse := services.SendPulse{}
-	sendPulse.SetFromConfig()
-	sendPulse.Send("9261157157","34563")
-
 	router := mux.NewRouter()
+
+	sms := services.IQSms{}
+	sms.SetFromConfig()
+	sms.Send("", "")
 
 	fs := http.FileServer(http.Dir("./public/dist/static"))
 	rp := router.PathPrefix("/static/")
@@ -42,7 +41,7 @@ func main() {
 	router.HandleFunc("/get_one_series", getOneSeriesAction)
 	router.HandleFunc("/delete_series", deleteSeriesAction)
 	router.HandleFunc("/update_series", updateSeriesAction)
-	router.HandleFunc("/get_user_series", getUserSeries)
+	router.HandleFunc("/get_user_series", getUserSeries) 
 	router.HandleFunc("/get_articles", getArticlesAction)
 	router.HandleFunc("/get_published_articles", getPublishedArticles)
 	router.HandleFunc("/aj_get_article", getArticleAction)
@@ -51,7 +50,7 @@ func main() {
 	router.HandleFunc("/aj_update_article", updateArticleAction)
 	router.HandleFunc("/aj_get_person", getPersonAction)
 	router.HandleFunc("/aj_get_persons", getPersonsAction)
-	http.ListenAndServe(":80", router)
+	http.ListenAndServe(":82", router)
 }
 
 func indexAction(w http.ResponseWriter, r *http.Request) {

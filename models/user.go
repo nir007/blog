@@ -69,9 +69,9 @@ func (u *User) Add() (err error) {
 		)
 
 		if err == nil && u.Id > 0 {
-			sendPulse := services.SendPulse{}
-			errConfig := sendPulse.SetFromConfig()
-			errSending := sendPulse.Send(u.Phone, code)
+			sender := services.IQSms{}
+			errConfig := sender.SetFromConfig()
+			_, errSending := sender.Send(u.Phone, code)
 
 			if errConfig != nil {
 				return errors.New("fail config sending confirmation code")
