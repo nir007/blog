@@ -21,62 +21,75 @@
 </template>
 
 <script>
-  export default {
-    name: 'SignIn',
-    data () {
-      return {
-        phone: '',
-        country: '',
-        showFailNumber: false,
-        phoneIsValid: false,
-        urls: {
-          signIn: '/aj_sign_in'
-        },
-        warnings: []
+export default {
+  name: 'SignIn',
+  data () {
+    return {
+      phone: '',
+      country: '',
+      showFailNumber: false,
+      phoneIsExists: false,
+      phoneIsValid: false,
+      urls: {
+        getCode: '/aj_get_code_to_login',
+        login: '/aj_login'
+      },
+      warnings: []
+    }
+  },
+  methods: {
+    onInputPhone ({ number, isValid, country }) {
+      this.phone = number
+      this.country = country != null ? country.name : ''
+      this.phoneIsValid = isValid
+    },
+    clearForm () {
+      this.phone = ''
+      this.code = ''
+    },
+    signIn () {
+      if (!this.phoneIsExists) {
+        alert('number is not exist')
+      } else {
+        location.href = '#/person/'
       }
     },
-    methods: {
-      onInputPhone: function ({ number, isValid, country }) {
-        this.phone = number
-        this.country = country != null ? country.name : ''
-        this.phoneIsValid = isValid
-      },
-      clearForm: function () {
-        this.uuid = ''
-      },
-      signIn: function () {
-        this.warnings = []
-        if (!this.uuid) {
-          this.warnings.push('Type uuid')
-        }
+    getCode () {
+      this.phoneIsExists = false
+      this.warnings = []
 
-        if (this.warnings.length > 0) {
-          this.$root.$emit('warning', this.warnings)
-          return
-        }
-
-        this.$http.post(this.urls.signIn,
-          'uuid=' + this.uuid,
-          {
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-            }
-          }
-        ).then(function (r) {
-          r = JSON.parse(r.bodyText)
-          if (r.status === 200) {
-            location.href = '#/person/'
-          } else {
-            this.$root.$emit('alarm', {err: r.data, timeout: 5000})
-          }
-        })
+      if (!this.phoneIsValid) {
+        this.warnings.push('Number is not valid')
       }
-    },
-    mounted () {
-      var self = this
-      this.$root.$on('signin', function () {
-        self.$refs.signin.show()
+
+      if (this.warnings.length > 0) {
+        this.$root.$emit('warning', this.warnings)
+        return
+      }
+
+      this.$http.post(this.urls.getCode,
+        'phone=' + this.phone,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+          }
+        }
+      ).then(function (r) {
+        r = JSON.parse(r.bodyText)
+        if (r.status === 200) {
+          this.phoneIsExists = true
+          this.signIn()
+        } else {
+          this.$root.$emit('alarm', {err: r.data, timeout: 5000})
+        }
       })
     }
+  },
+  mounted () {
+    var self = this
+    this.$root.$on('signin', function () {
+      self.$refs.signin.show()
+    })
   }
+}
 </script>

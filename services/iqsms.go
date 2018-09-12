@@ -53,6 +53,8 @@ func (s *IQSms) Send(phone, message string) (map[string]interface{}, error) {
 	mapBody := map[string]interface{}{}
 	body, err := ioutil.ReadAll(resp.Body)
 
+	fmt.Println(resp)
+
 	json.Unmarshal(body, &mapBody)
 
 	return mapBody, err

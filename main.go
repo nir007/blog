@@ -1,8 +1,8 @@
 package main
 
 import (
-	"./services"
-	sms "./contracts"
+	"./helpers"
+	"./models"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/satori/go.uuid"
@@ -10,19 +10,17 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"fmt"
 )
 
 const cookieNameId = "uuid"
 const contentTypeJson = "application/json"
 
+var helper = new(helpers.Helper)
 var loggedUsers = make(map[string]models.User, 10)
 
 func main() {
 	router := mux.NewRouter()
-
-	sms := services.IQSms{}
-	sms.SetFromConfig()
-	sms.Send("", "")
 
 	fs := http.FileServer(http.Dir("./public/dist/static"))
 	rp := router.PathPrefix("/static/")
@@ -50,6 +48,7 @@ func main() {
 	router.HandleFunc("/aj_update_article", updateArticleAction)
 	router.HandleFunc("/aj_get_person", getPersonAction)
 	router.HandleFunc("/aj_get_persons", getPersonsAction)
+	router.HandleFunc("/aj_get_code_to_login", getCodeToLoginAction)
 	http.ListenAndServe(":82", router)
 }
 
@@ -671,4 +670,42 @@ func getPersonsAction(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", contentTypeJson)
 	w.Write(response.ToBytes())
+}
+
+func getCodeToLoginAction(w http.ResponseWriter, r *http.Request) {
+	var maxAttempts int32 = 3
+	ip := helper.GetIp()
+	fmt.Println(ip)
+	response := models.Response{}
+	phone := r.FormValue("phone")
+
+	user := models.User{Phone:phone}
+
+	if len(phone) == 0 {
+		response.Status = 400
+		response.Data = "invalid phone"
+	} else if exists, err := user.PhoneNumberExists(); err != nil || !exists{
+		response.Status = 500
+		response.Data = "this phone does not exist"
+	} else {
+		attemptCode := models.AttemptLogin{
+			Phone: phone,
+			Code: helper.GetConformationCode(),
+			Ip: helper.GetIp(),
+		}
+		if attempts, _ := attemptCode.CountAttemptsGetCodeLastHour();
+			attempts > maxAttempts {
+			response.Status = 400
+			response.Data = "too many requests, hold a hour"
+		} else {
+			err := attemptCode.SendCode()
+			if err != nil {
+				response.Status = 500
+				response.Data = "fail sending code"
+			} else {
+				response.Status = 200
+				response.Data = "code is sended"
+			}
+		}
+	}
 }
