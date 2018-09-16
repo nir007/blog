@@ -73,6 +73,12 @@ export default {
             path: '#/persons',
             active: false,
             reqAuth: false
+          },
+          about: {
+            title: 'about',
+            path: '#/about',
+            active: false,
+            reqAuth: false
           }
         },
         right: {

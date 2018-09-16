@@ -10,6 +10,7 @@ import Persons from '@/components/pages/Persons'
 import Markdown from '@/components/pages/Markdown'
 import Founded from '@/components/pages/Founded'
 import PageNotFound from '@/components/pages/PageNotFound'
+import About from '@/components/pages/About'
 
 Vue.use(Resource)
 Vue.use(Router)
@@ -56,6 +57,11 @@ export default new Router({
       path: '/markdown',
       name: 'markdown',
       component: Markdown
+    },
+    {
+      path: '/about',
+      name: 'about',
+      component: About
     },
     {
       path: '/founded',
