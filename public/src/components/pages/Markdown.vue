@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="margin-top50px">
     <table class="markup-help-table">
       <thead>
         <tr>

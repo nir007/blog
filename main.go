@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./helpers"
 	"./models"
 	"encoding/json"
 	"github.com/gorilla/mux"
@@ -14,6 +15,7 @@ import (
 const cookieNameId = "uuid"
 const contentTypeJson = "application/json"
 
+var helper = new(helpers.Helper)
 var loggedUsers = make(map[string]models.User, 10)
 
 func main() {
@@ -45,6 +47,7 @@ func main() {
 	router.HandleFunc("/aj_update_article", updateArticleAction)
 	router.HandleFunc("/aj_get_person", getPersonAction)
 	router.HandleFunc("/aj_get_persons", getPersonsAction)
+	router.HandleFunc("/aj_get_code_to_login", getCodeToLoginAction)
 
 	go http.ListenAndServe(":80", http.HandlerFunc(redirect))
 	http.ListenAndServeTLS(":443", "rakan-tarakan.com.crt", "private.key", router)
