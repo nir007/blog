@@ -14,11 +14,20 @@ body {
     padding-top: 56px;
   }
 }
-.text {font-size: 22px;}
-.text > p {
-  text-indent: 1.5em;
-  text-align: justify; /* Выравнивание по ширине */
+.preview-text {
+  max-height: 250px; overflow: hidden; font-size: 16px!important;
 }
+.ok_msg {
+  background: #effaed url(/static/assets/img/msg_ok.png) no-repeat 12px 12px;
+  padding-left: 55px;
+  border-color: #afd4a9;
+}
+.msg_text {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 150%;
+}
+.text {font-size: 22px;}
 .text > img {
   display: inline;
   text-align: center;
@@ -27,7 +36,6 @@ body {
 .green-bg {
   background: #edffed;
 }
-
 .underline-link {text-decoration: underline;}
 .strong-link {font-weight: 900}
 

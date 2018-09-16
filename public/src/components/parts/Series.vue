@@ -40,7 +40,9 @@
         </b-button>
       </div>
       <div v-if="series.length === 0" class="text-center">
-        <h3 class="pointer margin-top20px margin-bottom20px" v-on:click="initCreateSeries">
+        <h3 class="pointer margin-top20px margin-bottom20px text-info underline-link"
+            v-on:click="initCreateSeries"
+        >
           Create the first series
         </h3>
       </div>

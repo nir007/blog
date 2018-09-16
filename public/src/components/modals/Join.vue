@@ -102,7 +102,6 @@ export default {
           }
         ).then(function (r) {
           r = JSON.parse(r.bodyText)
-          console.log(r)
           if (r.status === 200) {
             this.phoneExists = r.data
           }
@@ -154,7 +153,6 @@ export default {
       )
         .then(function (r) {
           r = JSON.parse(r.bodyText)
-          console.log(r)
           if (r.status === 200) {
             location.href = '#/person/'
           } else {

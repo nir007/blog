@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/url"
 	"io/ioutil"
-	"encoding/json"
+	"strings"
 )
 
 type IQSms struct {
@@ -15,6 +15,7 @@ type IQSms struct {
 	baseUrl  string
 	login    string
 	password string
+	sender   string
 }
 
 func (s *IQSms) SetFromConfig() (errConfFile error) {
@@ -27,22 +28,23 @@ func (s *IQSms) SetFromConfig() (errConfFile error) {
 	s.password, errConfFile = conf.Get("password")
 	s.baseUrl, errConfFile = conf.Get("baseurl")
 	s.sendUrl, errConfFile = conf.Get("sendurl")
+	s.sender, errConfFile = conf.Get("sender")
 
 	return err
 }
 
 func (s *IQSms) Send(phone, message string) (map[string]interface{}, error) {
-
 	u, _ := url.ParseRequestURI(s.baseUrl)
 	u.Path = s.sendUrl
 	urlString := u.String()
 
 	params := fmt.Sprintf(
-		`?login=%s&password=%s&text=%s&phone=%s`,
+		`?login=%s&password=%s&text=%s&phone=%s&sender=%s`,
 		s.login,
 		s.password,
 		message,
 		phone,
+		s.sender,
 	)
 
 	req, _ := http.NewRequest("GET", urlString + params, nil)
@@ -53,9 +55,16 @@ func (s *IQSms) Send(phone, message string) (map[string]interface{}, error) {
 	mapBody := map[string]interface{}{}
 	body, err := ioutil.ReadAll(resp.Body)
 
-	fmt.Println(resp)
+	row := strings.Split(string(body), ";")
 
-	json.Unmarshal(body, &mapBody)
+	if len(row) >= 1 {
+		mapBody[row[0]] = row[1]
+		if _, ok := mapBody["accepted"]; !ok {
+			err = errors.New(string(body))
+		}
+	} else {
+		err = errors.New("sms sender returned empty body")
+	}
 
 	return mapBody, err
 }

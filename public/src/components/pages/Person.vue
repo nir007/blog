@@ -9,18 +9,14 @@
             <img class="avatar" v-bind:src="avatar">
           </div>
           <div class="col-md-7 text-left">
-            <p>nickname: <strong>{{nickName}}</strong></p>
-            <p>about: <strong>{{person}}</strong></p>
-            <p>country: <strong>{{country}}</strong></p>
-            <p v-if="isOwner">phone: <strong>{{phone}}</strong></p>
-            <p v-if="isOwner">uuid:
-              <span v-if="!showUuid" @click="showUuid = true" class="pointer">Show</span>
-              <span v-if="showUuid">{{uuid}}</span>
+            <p><span class="text-muted">nickname:</span> {{nickName}}</p>
+            <p><span class="text-muted">about:</span> {{person}}</p>
+            <p><span class="text-muted">country:</span> {{country}}</p>
+            <p v-if="isOwner">
+              <span class="text-muted">phone:</span> {{phone}}
             </p>
             <p>
-              <small class="text-muted">
-                Зареган: {{createdAt}}
-              </small>
+              <small class="text-muted"> reg: {{createdAt}}</small>
             </p>
           </div>
           <div class="col-md-2 text-center">
@@ -152,7 +148,6 @@ export default {
       })
       .then(function (r) {
         r = JSON.parse(r.bodyText)
-        console.log(r)
         if (r.status === 200) {
           this.id = r.data.id
           this.uuid = r.data.uuid

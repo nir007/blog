@@ -4,7 +4,6 @@ import (
 	"../services"
 	"time"
 	"database/sql"
-	"strings"
 	"errors"
 	"math/rand"
 	"strconv"
@@ -21,6 +20,9 @@ const selectUsers = `SELECT id, person, nick_name, avatar, created_at
 
 const selectUserByUuid = `SELECT id, person, nick_name, avatar, uuid, created_at, country, phone, is_confirmed
 	FROM db_schema."user" WHERE uuid = $1`
+
+const selectUserByPhone = `SELECT id, person, nick_name, avatar, uuid, created_at, country, phone, is_confirmed
+	FROM db_schema."user" WHERE position($1 in phone) > 0`
 
 const findNickName = `SELECT count(*) AS count FROM db_schema."user" 
 	WHERE nick_name = $1`
@@ -100,7 +102,8 @@ func (u *User) PhoneNumberExists() (bool, error) {
 	var rows *sql.Rows
 
 	if u.Phone != "" {
-		rows, err = pg.ExecuteSelect(findPhone, strings.Trim(u.Phone, " "))
+		rows, err = pg.ExecuteSelect(findPhone, u.Phone)
+
 		if err == nil {
 			for rows.Next() {
 				rows.Scan(&count)
@@ -157,6 +160,32 @@ func (u *User) Exists() (bool, error) {
 func (u *User) One(id int64) (err error) {
 	var rows *sql.Rows
 	rows, err = pg.ExecuteSelect(selectUser, id)
+
+	if err == nil {
+		for rows.Next() {
+			rows.Scan(
+				&u.Id,
+				&u.Person,
+				&u.NickName,
+				&u.Avatar,
+				&u.Uuid,
+				&u.CreatedAt,
+				&u.Country,
+				&u.Phone,
+				&u.IsConfirmed,
+			)
+		}
+	}
+
+	return err
+}
+
+func (u *User) OneByPhone(phone string) (err error) {
+	var rows *sql.Rows
+	rows, err = pg.ExecuteSelect(
+		selectUserByPhone,
+		phone,
+	)
 
 	if err == nil {
 		for rows.Next() {

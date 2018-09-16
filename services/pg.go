@@ -53,6 +53,8 @@ func (p *Pg) Execute(query string, args ...interface{}) (id int32, err error) {
 		row.Scan(&id)
 	}
 
+	fmt.Println(err)
+
 	return id, err
 }
 

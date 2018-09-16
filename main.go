@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-	"fmt"
 )
 
 const cookieNameId = "uuid"
@@ -500,7 +499,7 @@ func getArticlesAction(w http.ResponseWriter, r *http.Request) {
 
 func checkPhoneNumberAction(w http.ResponseWriter, r *http.Request) {
 	response := models.Response{}
-	phone := r.FormValue("phone")
+	phone := helpers.ThoroughlyClearString(r.FormValue("phone"))
 	user := models.User{Phone: phone}
 
 	if exists, err := user.PhoneNumberExists(); err == nil {
@@ -580,32 +579,39 @@ func addUserAction(w http.ResponseWriter, r *http.Request) {
 
 func signInAction(w http.ResponseWriter, r *http.Request) {
 	response := models.Response{}
-	uid := r.FormValue(cookieNameId)
-	user := models.User{Uuid: uid}
+	code := helpers.ThoroughlyClearString(r.FormValue("code"))
+	phone := helpers.ThoroughlyClearString(r.FormValue("phone"))
 
-	if exists, err := user.Exists(); err == nil && exists {
-		loggedUsers[user.Uuid] = user
+	attemptLogin := models.AttemptLogin{Code: code, Phone: phone}
 
-		cookie := http.Cookie{
-			Name:    cookieNameId,
-			Value:   uid,
-			Expires: time.Now().Add(360 * 24 * time.Hour),
+	if id, err := attemptLogin.Last(); err == nil && id > 0 {
+		user := new(models.User)
+		user.OneByPhone(phone)
+
+		if user.Id > 0 {
+			loggedUsers[user.Uuid] = *user
+
+			cookie := http.Cookie{
+				Name:    cookieNameId,
+				Value:   user.Uuid,
+				Expires: time.Now().Add(360 * 24 * time.Hour),
+			}
+			http.SetCookie(w, &cookie)
+
+			data, _ := json.Marshal(user)
+
+			response.Status = 200
+			response.Data = data
+		} else {
+			response.Status = 404
+			response.Data = "user not found"
 		}
-		http.SetCookie(w, &cookie)
-
-		data, _ := json.Marshal(user)
-
-		response.Status = 200
-		response.Data = data
-
-		w.Header().Set("Content-Type", contentTypeJson)
-		w.Write(response.ToBytes())
-		return
+	} else {
+		response.Status = 403
+		response.Data = "bad code"
 	}
 
-	response.Status = 500
-	response.Data = "User not found"
-
+	w.Header().Set("Content-Type", contentTypeJson)
 	w.Write(response.ToBytes())
 }
 
@@ -673,39 +679,35 @@ func getPersonsAction(w http.ResponseWriter, r *http.Request) {
 }
 
 func getCodeToLoginAction(w http.ResponseWriter, r *http.Request) {
-	var maxAttempts int32 = 3
 	ip := helper.GetIp()
-	fmt.Println(ip)
-	response := models.Response{}
-	phone := r.FormValue("phone")
+	response := new(models.Response)
+	phone := helpers.ThoroughlyClearString(r.FormValue("phone"))
 
 	user := models.User{Phone:phone}
 
-	if len(phone) == 0 {
+	if len(phone) < 10 {
 		response.Status = 400
 		response.Data = "invalid phone"
-	} else if exists, err := user.PhoneNumberExists(); err != nil || !exists{
-		response.Status = 500
+	} else if exists, err := user.PhoneNumberExists(); err != nil || !exists {
+		response.Status = 404
 		response.Data = "this phone does not exist"
 	} else {
 		attemptCode := models.AttemptLogin{
 			Phone: phone,
 			Code: helper.GetConformationCode(),
-			Ip: helper.GetIp(),
+			Ip: ip,
 		}
-		if attempts, _ := attemptCode.CountAttemptsGetCodeLastHour();
-			attempts > maxAttempts {
-			response.Status = 400
-			response.Data = "too many requests, hold a hour"
+
+		err := attemptCode.SendCode()
+		if err != nil {
+			response.Status = 500
+			response.Data = err.Error()
 		} else {
-			err := attemptCode.SendCode()
-			if err != nil {
-				response.Status = 500
-				response.Data = "fail sending code"
-			} else {
-				response.Status = 200
-				response.Data = "code is sended"
-			}
+			response.Status = 200
+			response.Data = "code is sended"
 		}
 	}
+
+	w.Header().Set("Content-type", contentTypeJson)
+	w.Write(response.ToBytes())
 }

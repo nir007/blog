@@ -5,6 +5,7 @@ import (
 	"time"
 	"strconv"
 	"net"
+	"regexp"
 )
 
 type Helper struct {}
@@ -31,4 +32,10 @@ func (h * Helper) GetIp() string {
 		}
 	}
 	return ""
+}
+
+func ThoroughlyClearString(str string) (res string) {
+	var re = regexp.MustCompile(`[[:punct:]]|[[:space:]]`)
+	res = re.ReplaceAllString(str, "")
+	return res
 }
