@@ -678,3 +678,37 @@ func getPersonsAction(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", contentTypeJson)
 	w.Write(response.ToBytes())
 }
+
+func getCodeToLoginAction(w http.ResponseWriter, r *http.Request) {
+	ip := helper.GetIp()
+	response := new(models.Response)
+	phone := helpers.ThoroughlyClearString(r.FormValue("phone"))
+
+	user := models.User{Phone:phone}
+
+	if len(phone) < 10 {
+		response.Status = 400
+		response.Data = "invalid phone"
+	} else if exists, err := user.PhoneNumberExists(); err != nil || !exists {
+		response.Status = 404
+		response.Data = "this phone does not exist"
+	} else {
+		attemptCode := models.AttemptLogin{
+			Phone: phone,
+			Code: helper.GetConformationCode(),
+			Ip: ip,
+		}
+
+		err := attemptCode.SendCode()
+		if err != nil {
+			response.Status = 500
+			response.Data = err.Error()
+		} else {
+			response.Status = 200
+			response.Data = "code is sended"
+		}
+	}
+
+	w.Header().Set("Content-type", contentTypeJson)
+	w.Write(response.ToBytes())
+}
