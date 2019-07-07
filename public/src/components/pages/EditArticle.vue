@@ -131,7 +131,7 @@ export default {
       ).then(function (r) {
         r = JSON.parse(r.bodyText)
         if (r.status === 200) {
-          location.href = '#/a/' + r.data.id
+          alert('saved')
         } else {
           this.responseFailHandle(r)
         }
