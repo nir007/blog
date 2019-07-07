@@ -507,7 +507,7 @@ func getArticlesAction(w http.ResponseWriter, r *http.Request) {
 
 func checkPhoneNumberAction(w http.ResponseWriter, r *http.Request) {
 	response := models.Response{}
-	phone := r.FormValue("phone")
+	phone := helpers.ThoroughlyClearString(r.FormValue("phone"))
 	user := models.User{Phone: phone}
 
 	if exists, err := user.PhoneNumberExists(); err == nil {
@@ -587,32 +587,39 @@ func addUserAction(w http.ResponseWriter, r *http.Request) {
 
 func signInAction(w http.ResponseWriter, r *http.Request) {
 	response := models.Response{}
-	uid := r.FormValue(cookieNameId)
-	user := models.User{Uuid: uid}
+	code := helpers.ThoroughlyClearString(r.FormValue("code"))
+	phone := helpers.ThoroughlyClearString(r.FormValue("phone"))
 
-	if exists, err := user.Exists(); err == nil && exists {
-		loggedUsers[user.Uuid] = user
+	attemptLogin := models.AttemptLogin{Code: code, Phone: phone}
 
-		cookie := http.Cookie{
-			Name:    cookieNameId,
-			Value:   uid,
-			Expires: time.Now().Add(360 * 24 * time.Hour),
+	if id, err := attemptLogin.Last(); err == nil && id > 0 {
+		user := new(models.User)
+		user.OneByPhone(phone)
+
+		if user.Id > 0 {
+			loggedUsers[user.Uuid] = *user
+
+			cookie := http.Cookie{
+				Name:    cookieNameId,
+				Value:   user.Uuid,
+				Expires: time.Now().Add(360 * 24 * time.Hour),
+			}
+			http.SetCookie(w, &cookie)
+
+			data, _ := json.Marshal(user)
+
+			response.Status = 200
+			response.Data = data
+		} else {
+			response.Status = 404
+			response.Data = "user not found"
 		}
-		http.SetCookie(w, &cookie)
-
-		data, _ := json.Marshal(user)
-
-		response.Status = 200
-		response.Data = data
-
-		w.Header().Set("Content-Type", contentTypeJson)
-		w.Write(response.ToBytes())
-		return
+	} else {
+		response.Status = 403
+		response.Data = "bad code"
 	}
 
-	response.Status = 500
-	response.Data = "User not found"
-
+	w.Header().Set("Content-Type", contentTypeJson)
 	w.Write(response.ToBytes())
 }
 
@@ -712,3 +719,4 @@ func getCodeToLoginAction(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", contentTypeJson)
 	w.Write(response.ToBytes())
 }
+
