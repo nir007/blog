@@ -2,7 +2,8 @@ package models
 
 import (
 	"fmt"
-	"../services"
+
+	"blog/services"
 )
 
 const deleteRelations = `DELETE FROM db_schema.series_article
@@ -12,10 +13,10 @@ const insertRelations = `INSERT INTO db_schema.series_article
 	(series_id, article_id, order_num) VALUES `
 
 type SeriesArticle struct {
-	Id int        `json:"id"`
-	SeriesId int  `json:"series_id"`
+	Id        int `json:"id"`
+	SeriesId  int `json:"series_id"`
 	ArticleId int `json:"article_id"`
-	Order int     `json:"order"`
+	Order     int `json:"order"`
 }
 
 //update or insert relations series and articles
@@ -34,10 +35,9 @@ func (s *SeriesArticle) Rebuild(sId int32, articles []Article) (err error) {
 			)
 		}
 		if len(values) > 0 {
-			_, err = pg.Execute(insertRelations + values[0: len(values) - 1])
+			_, err = pg.Execute(insertRelations + values[0:len(values)-1])
 		}
 	}
 
 	return err
 }
-

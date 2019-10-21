@@ -3,11 +3,11 @@ package models
 import "encoding/json"
 
 type Response struct {
-	Status int       `json:"status"`
-	Data interface{} `json:"data"`
+	Status int         `json:"status"`
+	Data   interface{} `json:"data"`
 }
 
-func (r * Response) ToBytes() []byte {
+func (r *Response) ToBytes() []byte {
 	result, err := json.Marshal(r)
 
 	if err != nil {

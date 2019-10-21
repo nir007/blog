@@ -1,9 +1,10 @@
 package models
 
 import (
-	"time"
-	"../services"
 	"errors"
+	"time"
+
+	"blog/services"
 )
 
 const selectAttemptsGetCode = `SELECT count(*) FROM db_schema.attempt_get_code 

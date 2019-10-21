@@ -1,8 +1,9 @@
 package models
 
 import (
-	"../services"
 	"database/sql"
+
+	"blog/services"
 )
 
 const create = `INSERT INTO db_schema.series
@@ -36,16 +37,16 @@ func init() {
 }
 
 type Series struct {
-	Id int32       			`json:"id"`
-	AuthorId int32     		`json:"author_id"`
-	Count int64        		`json:"count"`
-	Title string       		`json:"title"`
-	Description string 		`json:"description"`
-	Published rune     		`json:"published"`
-	Articles []Article		`json:"articles"`
+	Id          int32     `json:"id"`
+	AuthorId    int32     `json:"author_id"`
+	Count       int64     `json:"count"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Published   rune      `json:"published"`
+	Articles    []Article `json:"articles"`
 }
 
-func (s * Series) Create() (id int32, err error) {
+func (s *Series) Create() (id int32, err error) {
 	return db.Execute(
 		create,
 		s.AuthorId,
@@ -95,12 +96,12 @@ func (s *Series) Read(limit, offset int64) (result []Series, err error) {
 		}
 
 		item := Series{
-			Id: id,
-			AuthorId: authorId,
-			Count: count.Int64,
-			Title: title.String,
+			Id:          id,
+			AuthorId:    authorId,
+			Count:       count.Int64,
+			Title:       title.String,
 			Description: description.String,
-			Published: published,
+			Published:   published,
 		}
 		result = append(result, item)
 	}

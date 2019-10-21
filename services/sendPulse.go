@@ -1,24 +1,25 @@
 package services
 
 import (
-	"github.com/kylelemons/go-gypsy/yaml"
-	"errors"
-	"net/http"
-	"fmt"
-	"net/url"
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/url"
+
+	"github.com/kylelemons/go-gypsy/yaml"
 )
 
 type SendPulse struct {
-	id              string
-	secret          string
-	accessUrl       string
-	sendUrl         string
-	grantType       string
-	transliterate   string
-	baseUrl         string
+	id            string
+	secret        string
+	accessUrl     string
+	sendUrl       string
+	grantType     string
+	transliterate string
+	baseUrl       string
 }
 
 func (s *SendPulse) SetFromConfig() (errConfFile error) {
@@ -82,7 +83,7 @@ func (s *SendPulse) Send(phone, message string) (map[string]interface{}, error) 
 	urlString := u.String()
 
 	params := fmt.Sprintf(
-`{"sender":"rakan"},
+		`{"sender":"rakan"},
 		"phones":"{"1":"%s"}"
 		"body":"%s",
 		"transliterate":"%s"`,

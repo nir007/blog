@@ -1,13 +1,14 @@
 package models
 
 import (
-	"../services"
-	"time"
+	"database/sql"
 	"encoding/json"
 	"fmt"
-	"database/sql"
-	"strings"
 	"regexp"
+	"strings"
+	"time"
+
+	"blog/services"
 )
 
 const insertArticle = `INSERT INTO db_schema.article
@@ -70,24 +71,24 @@ const removeArticle = `DELETE FROM db_schema.article
 	RETURNING id`
 
 type Article struct {
-	Id			int32				`json:"id,string,omitempty"`
-	SeriesId	int32				`json:"series_id,string,omitempty"`
-	AuthorId	int32				`json:"author_id,string,omitempty"`
-	Title		string				`json:"title"`
-	Text		string				`json:"text"`
-	CreatedAt	time.Time 			`json:"created"`
-	Tags		map[string]string	`json:"tags"`
-	Published	rune				`json:"published"`
-	IsOwner		bool				`json:"is_owner"`
-	Order		int32				`json:"order,string,omitempty"`
-	PrevArticle	map[string]string	`json:"prev_article"`
-	NextArticle	map[string]string	`json:"next_article"`
+	Id          int32             `json:"id,string,omitempty"`
+	SeriesId    int32             `json:"series_id,string,omitempty"`
+	AuthorId    int32             `json:"author_id,string,omitempty"`
+	Title       string            `json:"title"`
+	Text        string            `json:"text"`
+	CreatedAt   time.Time         `json:"created"`
+	Tags        map[string]string `json:"tags"`
+	Published   rune              `json:"published"`
+	IsOwner     bool              `json:"is_owner"`
+	Order       int32             `json:"order,string,omitempty"`
+	PrevArticle map[string]string `json:"prev_article"`
+	NextArticle map[string]string `json:"next_article"`
 }
 
 func (a *Article) Add() {
 	pg := services.Pg{}
 
-	tags := map[string]string {}
+	tags := map[string]string{}
 	var reg = regexp.MustCompile(`[#|$|%|^|&|*|(|)|@|!|?|>|<|/]`)
 
 	for k, _ := range a.Tags {
@@ -115,9 +116,9 @@ func (a *Article) Add() {
 	)
 }
 
-func (a *Article) Update() (id int32, err error ) {
+func (a *Article) Update() (id int32, err error) {
 	pg := services.Pg{}
-	tags := map[string]string {}
+	tags := map[string]string{}
 	var reg = regexp.MustCompile(`[#|$|%|^|&|*|(|)|@|!|?|>|<|/]`)
 
 	for k, _ := range a.Tags {
@@ -148,7 +149,7 @@ func (a *Article) Update() (id int32, err error ) {
 	return id, err
 }
 
-func (a *Article) Remove() (id int32, err error ) {
+func (a *Article) Remove() (id int32, err error) {
 	pg := services.Pg{}
 	return pg.Execute(removeArticle, a.Id, a.AuthorId)
 }
@@ -182,7 +183,7 @@ func (a *Article) GetPublished(authorId, perPage, skip int64) (result []Article,
 				&createdAt,
 			)
 
-			tagsMap := map[string]string {}
+			tagsMap := map[string]string{}
 
 			if tags.Valid {
 				json.Unmarshal([]byte(tags.String), &tagsMap)
@@ -240,7 +241,7 @@ func (a *Article) Get(sPublished, authorId, perPage, skip int64, tag string) (re
 				&published,
 			)
 
-			tagsMap := map[string]string {}
+			tagsMap := map[string]string{}
 
 			if tags.Valid {
 				json.Unmarshal([]byte(tags.String), &tagsMap)
@@ -294,21 +295,21 @@ func (a *Article) One(id int64) (err error) {
 			reg := regexp.MustCompile(`[\[|\]]`)
 
 			if nullPrevArticle.Valid {
-				prevArticleMap := map[string]string {}
+				prevArticleMap := map[string]string{}
 				nullPrevArticle.String = string(reg.ReplaceAllString(nullPrevArticle.String, ""))
 				json.Unmarshal([]byte(nullPrevArticle.String), &prevArticleMap)
 				a.PrevArticle = prevArticleMap
 			}
 
 			if nullNextArticle.Valid {
-				nextArticleMap := map[string]string {}
+				nextArticleMap := map[string]string{}
 				nullNextArticle.String = reg.ReplaceAllString(nullNextArticle.String, "")
 				json.Unmarshal([]byte(nullNextArticle.String), &nextArticleMap)
 				a.NextArticle = nextArticleMap
 			}
 
 			if nullTags.Valid {
-				tagsMap := map[string]string {}
+				tagsMap := map[string]string{}
 				json.Unmarshal([]byte(nullTags.String), &tagsMap)
 				a.Tags = tagsMap
 			}
@@ -318,7 +319,7 @@ func (a *Article) One(id int64) (err error) {
 	return err
 }
 
-func (a *Article) GetTags() (result map[string] string, err error) {
+func (a *Article) GetTags() (result map[string]string, err error) {
 	pg := services.Pg{}
 	rows, err := pg.ExecuteSelect(selectTags)
 

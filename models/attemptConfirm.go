@@ -2,8 +2,9 @@ package models
 
 import (
 	"time"
-	"../services"
-	)
+
+	"blog/services"
+)
 
 const insert = `INSERT INTO db_schema.attempt_confirm (uid, code, phone, date)
 	VALUES($1, $2, $3, $4)`

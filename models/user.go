@@ -1,12 +1,13 @@
 package models
 
 import (
-	"../services"
-	"time"
 	"database/sql"
 	"errors"
 	"math/rand"
 	"strconv"
+	"time"
+
+	"blog/services"
 )
 
 const insertUser = `INSERT INTO db_schema."user"(person, nick_name, avatar, uuid, created_at, country, phone)
@@ -38,16 +39,16 @@ func init() {
 }
 
 type User struct {
-	Id 			int32		`json:"id"`
-	Person 		string		`json:"person"`
-	NickName 	string		`json:"nick_name"`
-	Avatar 		string		`json:"avatar"`
-	Uuid 		string		`json:"uuid"`
-	CreatedAt 	time.Time	`json:"created_at"`
-	IsOwner		bool		`json:"is_owner"`
-	Country		string		`json:"country"`
-	Phone		string 		`json:"phone"`
-	IsConfirmed rune		`json:"is_confirmed"`
+	Id          int32     `json:"id"`
+	Person      string    `json:"person"`
+	NickName    string    `json:"nick_name"`
+	Avatar      string    `json:"avatar"`
+	Uuid        string    `json:"uuid"`
+	CreatedAt   time.Time `json:"created_at"`
+	IsOwner     bool      `json:"is_owner"`
+	Country     string    `json:"country"`
+	Phone       string    `json:"phone"`
+	IsConfirmed rune      `json:"is_confirmed"`
 }
 
 func (u *User) Add() (err error) {
@@ -84,10 +85,10 @@ func (u *User) Add() (err error) {
 			}
 
 			attemptConfirm := AttemptConfirm{
-				Uid: u.Id,
-				Code: string(code),
+				Uid:   u.Id,
+				Code:  string(code),
 				Phone: u.Phone,
-				Date: time.Now(),
+				Date:  time.Now(),
 			}
 			attemptConfirm.Add()
 		}
@@ -232,8 +233,8 @@ func (u *User) Get(limit, skip int64) (result []User, err error) {
 
 func (u *User) ConfirmPhone(code string) (confirmed bool, err error) {
 	a := AttemptConfirm{
-		Uid: u.Id,
-		Code: code,
+		Uid:   u.Id,
+		Code:  code,
 		Phone: u.Phone,
 	}
 
