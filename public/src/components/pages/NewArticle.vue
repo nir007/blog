@@ -70,6 +70,7 @@ import Prism from 'prismjs'
 import AuthHandler from '../mixins/AuthHandler.vue'
 import ResponseHandler from '../mixins/ResponseHandler.vue'
 import ConfirmPhone from '../parts/ConfirmPhone.vue'
+
 export default {
   name: 'NewArticle',
   mixins: [ResponseHandler, AuthHandler],
@@ -130,7 +131,7 @@ export default {
           this.responseFailHandle(r)
         }
       }, function () {
-        this.responseFailHandle({status: 500, data: '500 internal server error'})
+        this.responseFailHandle({ status: 500, data: '500 internal server error' })
       })
     }
   },
@@ -138,7 +139,7 @@ export default {
     Prism.highlightAll()
   },
   mounted () {
-    var self = this
+    const self = this
     this.$root.$on('check_is_logged', function (user) {
       if (user && 'id' in user && user.id > 0) {
         self.isLogged = true

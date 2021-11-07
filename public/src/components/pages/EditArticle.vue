@@ -177,7 +177,7 @@ export default {
       })
   },
   mounted () {
-    var self = this
+    const self = this
     this.$root.$on('check_is_logged', function (user) {
       if (user && 'id' in user && user.id > 0) {
         self.isLogged = true

@@ -2,6 +2,7 @@ module github.com/nir007/blog
 
 go 1.16
 
+
 require (
 	github.com/gorilla/mux v1.8.0
 	github.com/kylelemons/go-gypsy v0.0.0-20160905020020-08cad365cd28

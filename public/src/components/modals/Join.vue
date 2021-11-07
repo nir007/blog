@@ -186,7 +186,7 @@ export default {
     }
   },
   mounted () {
-    var self = this
+    const self = this
     this.$root.$on('join', function () {
       self.$refs.join.show()
     })

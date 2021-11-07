@@ -17,6 +17,7 @@ import ResponseHandler from '../mixins/ResponseHandler.vue'
 import Search from '../parts/Search.vue'
 import Tags from '../parts/Tags.vue'
 export default {
+  name: 'Articles',
   mixins: [ResponseHandler, AuthHandler],
   data () {
     return {

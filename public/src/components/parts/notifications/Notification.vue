@@ -10,7 +10,7 @@
 
 <script>
 export default {
-  name: 'Alarm',
+  name: 'notificationAlarm',
   data () {
     return {
       notifications: []
@@ -21,16 +21,16 @@ export default {
       this.show = false
     },
     hideAfter: function (timeout) {
-      let self = this
+      const self = this
       setTimeout(function () {
         self.notifications.pop()
       }, timeout)
     },
     parse: function (notification) {
       let errText = ''
-      let objToString = function (obj) {
+      const objToString = function (obj) {
         let result = ''
-        for (let i in obj) {
+        for (const i in obj) {
           result += '[ ' + i + ': ' + obj[i] + ' ] '
         }
         return result
@@ -39,7 +39,7 @@ export default {
       if (typeof notification.err === 'object' &&
         Object.keys(notification.err).length > 0
       ) {
-        for (let i in notification.err) {
+        for (const i in notification.err) {
           if (notification.err[i] != null &&
             typeof notification.err[i] !== 'object'
           ) {
@@ -54,21 +54,20 @@ export default {
         errText = notification.err
       }
 
-      let variant = 'variant' in notification
-        ? notification.variant : 'warning'
+      const variant = 'variant' in notification ? notification.variant : 'warning'
 
       if ('timeout' in notification) {
         this.hideAfter(notification.timeout)
       }
 
-      return {variant: variant, text: errText}
+      return { variant: variant, text: errText }
     }
   },
   created () {
-    let self = this
+    const self = this
     this.$root.$on('alarm', function (notification) {
       self.notifications = []
-      let result = self.parse(notification)
+      const result = self.parse(notification)
       if (result.text) {
         self.notifications.push(result)
       }

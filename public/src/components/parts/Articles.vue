@@ -152,7 +152,7 @@ export default {
     Prism.highlightAll()
   },
   mounted () {
-    let self = this
+    const self = this
     this.$root.$on('ok', function () {
       self.remove()
     })

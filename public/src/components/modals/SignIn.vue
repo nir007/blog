@@ -136,7 +136,7 @@ export default {
     }
   },
   mounted () {
-    var self = this
+    const self = this
     this.$root.$on('signin', function () {
       self.$refs.signin.show()
     })

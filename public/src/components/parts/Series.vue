@@ -131,7 +131,7 @@ export default {
   },
   mounted () {
     this.getSeries()
-    let self = this
+    const self = this
     this.$root.$on('series_updated', function (updates) {
       for (let i in self.series) {
         if (self.series[i].id === updates.id) {

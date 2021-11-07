@@ -32,7 +32,7 @@ export default {
     }
   },
   mounted () {
-    var self = this
+    const self = this
     this.$root.$on('warning', function (data) {
       self.warnings = data
       self.$refs.warning.show()

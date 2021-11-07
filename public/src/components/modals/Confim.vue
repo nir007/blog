@@ -18,7 +18,7 @@
 
 <script>
 export default {
-  name: 'Confirm',
+  name: 'confirmPhone',
   data () {
     return {
       text: '',
@@ -36,7 +36,7 @@ export default {
     }
   },
   mounted () {
-    var self = this
+    const self = this
     this.$root.$on('confirm', function (text) {
       self.text = text
       self.$refs.confirm.show()

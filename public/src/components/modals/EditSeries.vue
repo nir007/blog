@@ -187,7 +187,7 @@ export default {
     }
   },
   mounted () {
-    var self = this
+    const self = this
     this.$root.$on('init_edit_series', function (el) {
       self.updatedCount = 0
       self.seriesId = el.id

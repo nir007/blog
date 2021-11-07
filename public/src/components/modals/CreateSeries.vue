@@ -105,7 +105,7 @@ export default {
     }
   },
   mounted () {
-    var self = this
+    const self = this
     this.$root.$on('init_create_series', function () {
       self.$refs.createSeries.show()
     })
