@@ -56,20 +56,26 @@ export default {
     return {
       menu: {
         center: {
+          Groups: {
+            title: 'Groups of events',
+            path: '#/groups',
+            active: true,
+            reqAuth: false
+          },
           articles: {
-            title: 'articles',
+            title: 'Articles',
             path: '#/articles',
             active: false,
             reqAuth: false
           },
           newArticle: {
-            title: 'new article',
+            title: 'New article',
             path: '#/new_article',
             active: true,
             reqAuth: true
           },
           persons: {
-            title: 'persons',
+            title: 'Persons',
             path: '#/persons',
             active: false,
             reqAuth: false

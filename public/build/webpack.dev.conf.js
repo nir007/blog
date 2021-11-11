@@ -2,14 +2,13 @@
 const utils = require('./utils')
 const webpack = require('webpack')
 const config = require('../config')
-const { merge } = require('webpack-merge');
+const merge = require('webpack-merge')
 const path = require('path')
 const baseWebpackConfig = require('./webpack.base.conf')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin')
 const portfinder = require('portfinder')
-const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
 const HOST = process.env.HOST
 const PORT = process.env.PORT && Number(process.env.PORT)
@@ -23,39 +22,35 @@ const devWebpackConfig = merge(baseWebpackConfig, {
 
   // these devServer options should be customized in /config/index.js
   devServer: {
-
-    //clientLogLevel: 'warning',
+    clientLogLevel: 'warning',
     historyApiFallback: {
       rewrites: [
         { from: /.*/, to: path.posix.join(config.dev.assetsPublicPath, 'views/index.html') },
       ],
     },
     hot: true,
-    //contentBase: false, // since we use CopyWebpackPlugin.
+    contentBase: false, // since we use CopyWebpackPlugin.
     compress: true,
     host: HOST || config.dev.host,
     port: PORT || config.dev.port,
     open: config.dev.autoOpenBrowser,
-    /*overlay: config.dev.errorOverlay
+    overlay: config.dev.errorOverlay
       ? { warnings: false, errors: true }
-      : false,*/
-    //publicPath: config.dev.assetsPublicPath,
+      : false,
+    publicPath: config.dev.assetsPublicPath,
     proxy: config.dev.proxyTable,
-    //quiet: true, // necessary for FriendlyErrorsPlugin
-    /*watchOptions: {
-
-    }*/
-  },
-  optimization: {
-    moduleIds: 'named'
+    quiet: true, // necessary for FriendlyErrorsPlugin
+    watchOptions: {
+      poll: config.dev.poll,
+    }
   },
   plugins: [
     new webpack.DefinePlugin({
       'process.env': require('../config/dev.env')
     }),
     new webpack.HotModuleReplacementPlugin(),
+    new webpack.NamedModulesPlugin(), // HMR shows correct file names in console on update.
     new webpack.NoEmitOnErrorsPlugin(),
-    new VueLoaderPlugin(),
     // https://github.com/ampedandwired/html-webpack-plugin
     new HtmlWebpackPlugin({
       filename: 'views/index.html',
@@ -63,12 +58,13 @@ const devWebpackConfig = merge(baseWebpackConfig, {
       inject: true
     }),
     // copy custom static assets
-    new CopyWebpackPlugin(
+    new CopyWebpackPlugin([
       {
-        patterns: [
-          { from: path.resolve(__dirname, '../static'), to: config.dev.assetsSubDirectory },
-        ],
-      })
+        from: path.resolve(__dirname, '../static'),
+        to: config.dev.assetsSubDirectory,
+        ignore: ['.*']
+      }
+    ])
   ]
 })
 
@@ -82,7 +78,6 @@ module.exports = new Promise((resolve, reject) => {
       process.env.PORT = port
       // add port to devServer config
       devWebpackConfig.devServer.port = port
-      devWebpackConfig.mode = "development"
 
       // Add FriendlyErrorsPlugin
       devWebpackConfig.plugins.push(new FriendlyErrorsPlugin({

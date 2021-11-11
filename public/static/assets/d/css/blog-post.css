@@ -47,6 +47,7 @@ body {
 .margin-top7px {margin-top: 7px}
 .margin-top5px {margin-top: 5px}
 .margin-bottom20px{margin-bottom: 20px}
+.margin-bottom50px{margin-bottom: 50px}
 .margin-bottom5px {margin-bottom: 5px}
 .default-avatar {background: #5cb85c;border-radius: 900px; height: 90px; width: 90px}
 .avatar {max-width: 100px; max-height: 100px; margin: 15px; border-radius: 900px; border: 1px solid forestgreen; cursor: pointer;}
@@ -165,4 +166,7 @@ a {
   -webkit-transform: translate(0, 4px) rotateX(20deg);
   -moz-transform: translate(0, 4px);
   transform: translate(0, 4px);
+}
+.modal-backdrop {
+  opacity:0.5 !important;
 }
