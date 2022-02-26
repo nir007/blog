@@ -13,7 +13,7 @@
   "dependencies": {
     "bootstrap-vue": "^2.21.2",
     "bootstrap-vue-timeline": "^1.0.2",
-    "prismjs": "^1.25.0",
+    "prismjs": "^1.27.0",
     "vue": "^2.5.2",
     "vue-markdown": "^2.2.4",
     "vue-resource": "^1.5.3",
